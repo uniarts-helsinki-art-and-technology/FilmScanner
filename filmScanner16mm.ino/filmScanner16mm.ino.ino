@@ -6,7 +6,7 @@
     |                                                    |
     |      description: code for 16mm telecine machine . | 
     |                                                    |
-    |                  date: 23.10.2020                   |
+    |                  date: 30.10.2020                   |
     |                                                    |
     ^----------------------------------------------------^
 
@@ -45,14 +45,9 @@ const int FRAME_DETECTION = 52;
 
 
 bool backwards = false;
-bool ready_to_move = false;
 
 int frame_detected = false;
-
-
 int kierrokset=0;
-
-
 
 void setup() {
   
@@ -72,34 +67,31 @@ void setup() {
 
   pinMode (FRAME_DETECTION, INPUT_PULLUP);
   
+  
+  if(backwards){
+      
+      digitalWrite(DIRECTION_1,LOW);
+      digitalWrite(ENABLE_1,LOW);
+      digitalWrite(DIRECTION_2,LOW);
+      digitalWrite(ENABLE_2,LOW);
+      digitalWrite(DIRECTION_3,LOW);
+      digitalWrite(ENABLE_3,LOW);
+  } 
+  else
+  {
+      digitalWrite(DIRECTION_1,HIGH);
+      digitalWrite(ENABLE_1,LOW);
+      digitalWrite(DIRECTION_2,HIGH);
+      digitalWrite(ENABLE_2,LOW);
+      digitalWrite(DIRECTION_3,HIGH);
+      digitalWrite(ENABLE_3,LOW);
+  }
 
 }
 
 
 void loop() {
 
-if(backwards){
-    
-    digitalWrite(DIRECTION_1,LOW);
-    digitalWrite(ENABLE_1,LOW);
-    digitalWrite(DIRECTION_2,LOW);
-    digitalWrite(ENABLE_2,LOW);
-    digitalWrite(DIRECTION_3,LOW);
-    digitalWrite(ENABLE_3,LOW);
-} 
-else
-{
-    digitalWrite(DIRECTION_1,HIGH);
-    digitalWrite(ENABLE_1,LOW);
-    digitalWrite(DIRECTION_2,HIGH);
-    digitalWrite(ENABLE_2,LOW);
-    digitalWrite(DIRECTION_3,HIGH);
-    digitalWrite(ENABLE_3,LOW);
-}
-
-
-
-    
   for (int i=0; i<5000; i++)    //Forward 5000 steps
   {
     
@@ -107,16 +99,16 @@ else
     digitalWrite(PULSE_2,HIGH);
     digitalWrite(PULSE_3,HIGH);
 
-    delayMicroseconds(50);
+    delayMicroseconds(100);
 
     digitalWrite(PULSE_1,LOW);
     digitalWrite(PULSE_2,LOW);
     digitalWrite(PULSE_3,LOW);
     
-    delayMicroseconds(50);
+    delayMicroseconds(100);
 
       // Do not detect switch state until motor has rotated
-      if(i>200)
+      if(i>150)
       {
       // read the state of the frame detection switch value:
       frame_detected = digitalRead(FRAME_DETECTION);
@@ -131,13 +123,14 @@ else
       
     }
     
-  // laske kierrokset    
+  // count the images  
   kierrokset++;
+
   
   Serial.println("ota raw kuva!");
-  Serial.print("Frameja on :"+kierrokset);
+  Serial.print("Frameja on :"+String(kierrokset));
 
   // wait between frames
-  delay(2000);
+  delay(1000);
   
   }

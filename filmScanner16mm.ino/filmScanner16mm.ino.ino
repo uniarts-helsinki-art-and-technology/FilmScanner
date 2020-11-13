@@ -93,7 +93,7 @@ void loop()
       break;
     case 2:
       move_one_frame(100);
-      if(recording == true)
+      if(recording == true && running_forward==true)
       {
         Serial.println("ota kuva!");
         // TODO: send signal via lanc
@@ -231,6 +231,45 @@ void readPlayControl()
         Serial.println("Stop running!");
         mode = 0;
     }
+}
+
+
+void changeToRewindMode()
+{
+  mode=1;
+  disableGateMotor();
+  
+  if(running_forward==true)
+  {
+    setDirectionForwards();
+  }
+  else
+  {
+    setDirectionBackwards();
+  }
+}
+
+void changeToPlayMode()
+{
+  mode=2;
+  enableAllMotors();
+  
+  if(running_forward==true)
+  {
+    setDirectionForwards();
+  }
+  else
+  {
+    setDirectionBackwards();
+  }
+}
+
+void changeDirection()
+{
+  // stop the process just in case
+  mode=0;
+  recording_mode=false;
+  running_forward=!running_forward;
 }
 
 

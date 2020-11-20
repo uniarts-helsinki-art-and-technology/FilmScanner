@@ -6,13 +6,12 @@
     |                                                    |
     |      description: code for 16mm telecine machine . | 
     |                                                    |
-    |                  date: 13.11.2020                   |
+    |                  date: 20.11.2020                   |
     |                                                    |
     ^----------------------------------------------------^
 
     
  *                      NOTES
- *       Check out the pinouts and cabeling!
  * 
  * 
  * 
@@ -23,23 +22,29 @@
 
 
 // A) Antava Stepperi 1
-const int PULSE_1 = 2; // STEP 1
-const int DIRECTION_1 = 3; // DIRECTION 1
-const int ENABLE_1 = 4; // ENABLE 1
+const byte PULSE_1 = 2; // STEP 1
+const byte DIRECTION_1 = 3; // DIRECTION 1
+const byte ENABLE_1 = 4; // ENABLE 1
 
 // B) Ottava Stepperi 2
-const int PULSE_2     = 5; // STEP 2
-const int DIRECTION_2 = 6; // DIRECTION 2
-const int ENABLE_2    = 7; // ENABLE 2
+const byte PULSE_2     = 5; // STEP 2
+const byte DIRECTION_2 = 6; // DIRECTION 2
+const byte ENABLE_2    = 7; // ENABLE 2
 
 // C) Gate/spro Stepper 3
-const int PULSE_3     = 8; // ENABLE 3
-const int DIRECTION_3 = 9; // ENABLE 3
-const int ENABLE_3    = 10; // STEP 3
+const byte PULSE_3     = 8; // ENABLE 3
+const byte DIRECTION_3 = 9; // ENABLE 3
+const byte ENABLE_3    = 10; // STEP 3
+
+// ARRAYS FOR PINS
+const byte STEPPER_PULSE_PINS[] = {PULSE_1,PULSE_2,PULSE_3};
+const byte STEPPER_DIRECTION_PINS[] = {DIRECTION_1,DIRECTION_2,DIRECTION_3};
+const byte STEPPER_ENABLE_PINS[] = {ENABLE_1,ENABLE_2,ENABLE_3};
 
 // Buttons/Switches
-const int PIN_PLAY_BUTTON = 50;
-const int PIN_FRAME_DETECTION_SWITCH = 52; 
+const byte PIN_PLAY_BUTTON = 50;
+const byte PIN_FRAME_DETECTION_SWITCH = 52;
+const byte PIN_STOP_BUTTON = 48; // TODO: Check wiring!
 // TODO: Add some new buttons here!
 // BUTTON_KELAUS_ETEEN
 // BUTTON_KELAUS_TAAKSE
@@ -48,15 +53,17 @@ const int PIN_FRAME_DETECTION_SWITCH = 52;
 // BUTTON_STOP
 // BUTTON_REC
 
-// modes
-int mode = 0; // 0=stopped, 1=rewind, 2=play
+// modes (byte on 8 bittiä 0-255)
+byte mode = 0; // 0=stopped, 1=rewind, 2=play, 3=stop
+
+// booleans joko 0 tai 1
 bool recording = false;
 
 // running directions (true = forwards, false = backwards)
 bool running_forward = true;
 
 // other global variables
-int saved_frames_count=0;
+unsigned long saved_frames_count=0;
 
 
 void setup() {
@@ -67,11 +74,15 @@ void setup() {
   
   enableAllMotors();
 
+  // setup gate stepper according to the settings
+  // THIS IS JUST FOR DEBUGGING PURPOSE
   if(mode == 1)
   {
     disableGateMotor();
   }
-  
+
+  // setup direction according to the settings
+  // THIS IS JUST FOR DEBUGGING PURPOSE
   if(running_forward==true)
   {
     setDirectionForwards();
@@ -81,95 +92,159 @@ void setup() {
     setDirectionBackwards();
   }
   
-}
+} // setup loppuu
 
 
 void loop() 
 {
-  switch (mode)
+  switch (mode) // tarkistetaan miten filmiä siirretään
   {
-    case 1:
-      rewinding(100);
+    case 1: // WINDING BOTH RW AND FFW
+      winding(100);
       break;
-    case 2:
+    case 2: // PLAY BOTH BACKWARDS / FORWARDS, RECORDING
       move_one_frame(100);
+      // check skipped frames here
+      
       if(recording == true && running_forward==true)
       {
         Serial.println("ota kuva!");
         // TODO: send signal via lanc
-        // TODO: wait until frame is saved. How long time? Knob for adjusting time?
-        Serial.print("Number of saved frames :"+String(saved_frames_count));
+        // TODO: wait until frame is saved. State switch for adjusting time. Read value only once when starting recording!
+        Serial.println("Number of saved frames :"+String(saved_frames_count));
         // count the images  
-        saved_frames_count++;
+        saved_frames_count=saved_frames_count + 1; // sama kuin -> saved_frames_count++; tai saved_frames_count+=1;
       }
       // pause always after single frame is moved
       delay(1000);
       break;
-    default:
+    case 3: // STOP
+      // stopped, no need to move anywhere
+      break;
+    default: // STOP
       // stopped, no need to move anywhere
       break;
   }
 
+
   // read inputs from control panel
-  readPlayControl();
-  // TODO: readRewindControl(); > set mode
-  // TODO: readDirectionControl(); > set direction
   
+  switch(mode)
+  {
+    case 1: // WINDING
+      // check stop button
+      readStopButton();
+      break;
+    case 2: // PLAY RECORD
+      // check stop button
+      readStopButton();
+      break;
+    case 3: // STOP
+      // CHECK ALL BUTTONS
+      readAllButtons();
+      break;
+    default:
+      break;
+  }
+    
   // print info
   //TODO: print info to lcd
+  // mode
+  // speed
 
+} // loop funktio loppuu 
+
+void readStopButton(){
+        // read the state of the stop button value:
+      int stop_pressed = digitalRead(PIN_STOP_BUTTON);
+      
+      if(stop_pressed == LOW)
+      {   
+          Serial.println("STOP PRESSED");
+          recording=false; 
+          mode=3;
+      }
+}
+
+void readAllButtons(){
+        // FFW : setDirectionForwards(); mode=1; 
+      // RW : setDirectionBackwards(); mode=1; 
+      // REC : setDirectionForwards(); recording=true; mode=2; 
+      // PLAY BACKWARDS : setDirectionBackwards(); mode=2; 
+      // PLAY FORWARDS : setDirectionForwards(); mode=2; 
+      // STOP : recording=false; mode=3;
 }
 
 
 void move_one_frame(int pulse_delay)
 {
-  for (int i=0; i<5000; i++)    //Forward 5000 steps
+  //Forward 5000 steps? TODO: CHOOSE ANOTHER HARD CODED VALUE?
+  for (int i=0; i<5000; i++)
   {
   
-  move_one_step(pulse_delay);
-  
-  // Do not detect switch state until motor has rotated
-  if(i>150)
-  {
-    // read the state of the frame detection switch value:
-    int frame_detected = digitalRead(PIN_FRAME_DETECTION_SWITCH);
+    move_one_step(pulse_delay);
     
-    // if switch is pressed break out from for loop
-    if(frame_detected == LOW)
+    // Do not detect switch state until motor has rotated
+    if(i>150)
     {
-        // break out from loop when frame is detected
-        Serial.println("frame detected!");
-        i= 5000;
+      // read the state of the frame detection switch value:
+      int frame_detected = digitalRead(PIN_FRAME_DETECTION_SWITCH);
+      
+      // if switch is pressed break out from for loop
+      if(frame_detected == LOW)
+      {
+          // break out from loop when frame is detected
+          Serial.println("frame detected!");
+          Serial.println("Number of steps:"+String(i));
+          //number_of_pulses_between_frames = i;
+          if(i>450)
+          {
+            mode=0;
+            Serial.println("frame drop detected!");
+          }
+          i= 5000;
+      }
     }
-  }
   
   }
 }
 
+void move_one_frame_option2(int pulse_delay)
+{
+  // ADD 10K RESISTOR TO SWITCH AND CHANGE INPUT_PULLUP TO INPUT
+  // AND CHECK THE LOGIC "HIGH" OR "LOW
+  do {
+    move_one_step(pulse_delay);
+  } while (digitalRead(PIN_FRAME_DETECTION_SWITCH) == HIGH);
+}
+
+
 void play_pulseHIGH()
 {
-  digitalWrite(PULSE_1,HIGH);
-  digitalWrite(PULSE_2,HIGH);
-  digitalWrite(PULSE_3,HIGH);
+  for(int i=0;i<3;i++){
+    digitalWrite(STEPPER_PULSE_PINS[i],HIGH);
+  }
 }
  
 void play_pulseLOW()
 {
-  digitalWrite(PULSE_1,LOW);
-  digitalWrite(PULSE_2,LOW);
-  digitalWrite(PULSE_3,LOW);
+  for(int i=0;i<3;i++){
+    digitalWrite(STEPPER_PULSE_PINS[i],LOW);
+  }
 }
 
 void rewind_pulseHIGH()
 {
-  digitalWrite(PULSE_1,HIGH);
-  digitalWrite(PULSE_2,HIGH);
+  for(int i=0;i<2;i++){
+    digitalWrite(STEPPER_PULSE_PINS[i],HIGH);
+  }
 }
  
 void rewind_pulseLOW()
 {
-  digitalWrite(PULSE_1,LOW);
-  digitalWrite(PULSE_2,LOW);
+  for(int i=0;i<2;i++){
+    digitalWrite(STEPPER_PULSE_PINS[i],LOW);
+  }
 }
 
 void move_one_step(int pulse_delay)
@@ -180,7 +255,7 @@ void move_one_step(int pulse_delay)
   delayMicroseconds(pulse_delay);
 }
 
-void rewinding(int pulse_delay)
+void winding(int pulse_delay)
 {
   rewind_pulseHIGH();
   delayMicroseconds(50);
@@ -191,31 +266,29 @@ void rewinding(int pulse_delay)
 
 void setDirectionForwards()
 {
-  digitalWrite(DIRECTION_1,HIGH);
-  digitalWrite(DIRECTION_2,HIGH);
-  digitalWrite(DIRECTION_3,HIGH);
+  for(int i=0;i<3;i++){
+    digitalWrite(STEPPER_DIRECTION_PINS[i],HIGH);
+  }
 }
 
 void setDirectionBackwards()
 {
-  digitalWrite(DIRECTION_1,LOW);
-  digitalWrite(DIRECTION_2,LOW);
-  digitalWrite(DIRECTION_3,LOW);
+  for(int i=0;i<3;i++){
+    digitalWrite(STEPPER_DIRECTION_PINS[i],LOW);
+  }
 }
 
 void enableAllMotors()
 {
-  digitalWrite(ENABLE_1,LOW);
-  digitalWrite(ENABLE_2,LOW);
-  digitalWrite(ENABLE_3,LOW);
+  for(int i=0;i<3;i++){
+    digitalWrite(STEPPER_ENABLE_PINS[i],LOW);
+  }
 }
 
 void disableGateMotor()
 {
   digitalWrite(ENABLE_3,HIGH);
 }
-
-
 
 void readPlayControl()
 {
@@ -228,6 +301,7 @@ void readPlayControl()
     }
     else
     {
+      // TODO: THIS MIGHT BE BUGGY, USE 10K RESISTOR WITH SWITCH AND CHANGE INPUT_PULLUP TO INPUT
         Serial.println("Stop running!");
         mode = 0;
     }
@@ -268,26 +342,26 @@ void changeDirection()
 {
   // stop the process just in case
   mode=0;
-  recording_mode=false;
+  recording=false;
   running_forward=!running_forward;
 }
 
 
 
 void setPinModes(){
-  pinMode (PULSE_1, OUTPUT);
-  pinMode (DIRECTION_1, OUTPUT);
-  pinMode (ENABLE_1, OUTPUT);
   
-  pinMode (PULSE_2, OUTPUT);
-  pinMode (DIRECTION_2, OUTPUT);
-  pinMode (ENABLE_2, OUTPUT);
-  
-  pinMode (PULSE_3, OUTPUT);
-  pinMode (DIRECTION_3, OUTPUT);
-  pinMode (ENABLE_3, OUTPUT);
+  // stepper motors
+  for(int i=0;i<3;i++){
+    pinMode (STEPPER_PULSE_PINS[i], OUTPUT);
+    pinMode (STEPPER_DIRECTION_PINS[i], OUTPUT);
+    pinMode (STEPPER_ENABLE_PINS[i], OUTPUT);
+  }
 
+  // switches
   pinMode (PIN_FRAME_DETECTION_SWITCH, INPUT_PULLUP);
+
+  // buttons
   pinMode (PIN_PLAY_BUTTON, INPUT_PULLUP);
+  // ADD NEW BUTTONS HERE
 }
   

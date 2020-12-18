@@ -2,7 +2,7 @@
 #define FilmScanner_h
 
 #include "Arduino.h"
-#include <PrintEx.h>
+//#include <PrintEx.h>
 
 #define FORWARDS true
 #define BACKWARDS false

@@ -19,7 +19,7 @@
  *
  * 
  */
- # include "FilmScanner.h"
+ #include "FilmScanner.h"
  #include <LiquidCrystal_I2C.h> // external library
  
 LiquidCrystal_I2C lcd(0x27,20,21);  // NOTE! Before use, run ic2_scanner sketch and get the IC2 address, 0x27 for example
@@ -54,14 +54,8 @@ void setup() {
 
   // Initialize the LCD
   lcd.init();
-  // Print a message to the LCD.
-  lcd.backlight();
-  lcd.setCursor(0, 0);
-  lcd.print("Film scanner 0.1");
-  lcd.setCursor(0,1);
-  lcd.print("Starting...");
+  printLCD(0);
 
-  delay(1000);
 }
 
 
@@ -96,21 +90,12 @@ void loop()
         FilmScanner.unlockMotor(m2);
         // scanner is stopped, waiting user to push ffw / rw button
       }
-      
-      if(drawLCD == true)
-      {
-      // Print a message to the LCD.
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Reel-To-Reel");
-        drawLCD=false;
-      }   
-      drawLCD_stopped=true;
+      printLCD(1);
 
       break;
     case 2: // PLAY AND RECORD
 
-       // PLAY FORWARDS
+      // PLAY FORWARDS
       if(FilmScanner.isPlayingForwards() == true)
       {
         FilmScanner.setMotorDirectionForward(m1,m2,m_gate);
@@ -123,42 +108,20 @@ void loop()
         if(FilmScanner.isRecording() == true)
         {
           // Take photo!
-          // TODO: send signal via lanc
+          // TODO: send signal via lanc: SEND HIGH TO TWO PINS: RELEASE + FOCUS
           // TODO: wait until frame is saved. 
           saved_frames_count=saved_frames_count + 1;
-          if(drawLCD == true)
-          {
-            // Print a message to the LCD (only once)
-            lcd.clear();
-            lcd.setCursor(0, 0);
-            lcd.print("Recording");
-            lcd.setCursor(0,1);
-            lcd.print("FC:");
-            drawLCD=false;
-            drawLCD_stopped=true;
-          } 
-          
-          // Print a message to the LCD (continuously)
-          lcd.setCursor(4,1);
-          lcd.print(String(saved_frames_count));
+          printLCD(2);
         }
         else
         {
-         if(drawLCD == true)
-          {
-            // Print a message to the LCD (only once)
-            lcd.clear();
-            lcd.setCursor(0, 0);
-            lcd.print("Playing");
-            drawLCD=false;
-            drawLCD_stopped=true;
-          } 
+         printLCD(3);
           
         }
         // pause always after single frame is moved
         delay(my_delay);
       }
-       // PLAY BACKWARDS
+      // PLAY BACKWARDS
       else if(FilmScanner.isPlayingBackwards() == true)
       {
         FilmScanner.setMotorDirectionBackward(m1,m2,m_gate);
@@ -166,14 +129,7 @@ void loop()
         FilmScanner.lockMotor(m1);
         FilmScanner.lockMotor(m_gate);
         FilmScanner.moveOneFrame(m1,m_gate);
-        if(drawLCD == true)
-        {
-          // Print a message to the LCD (only once)
-          lcd.clear();
-          lcd.setCursor(0, 0);
-          lcd.print("Play Backwards");
-          drawLCD = false;
-        }
+        printLCD(4);
         // pause always after single frame is moved
         delay(1000);
       }
@@ -182,48 +138,27 @@ void loop()
       {
         // wait user to push: play / play_b / rec button
         FilmScanner.unlockMotor(m1);
-        FilmScanner.unlockMotor(m2);
+        FilmScanner.lockMotor(m2);
         FilmScanner.unlockMotor(m_gate);
-      
-       if(drawLCD_stopped==true)
-       {
-        // Print a message to the LCD (only once)
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Stopped");
-        lcd.setCursor(0,1);
-        lcd.print("Speed:");
-        drawLCD = true;
-        drawLCD_stopped=false;
-        }    
-        // Print a message to the LCD (continuously)
-        lcd.setCursor(6,1);
-        lcd.print(String(my_delay));
+
+        printLCD(5);
       }
       break;
     case 3:
-      // ERROR IN SCANNING:
-      // TODO: solve error with multi jog?
+        // ERROR IN SCANNING:
+        // TODO: solve error with multi jog?
+        printLCD(6);
 
-        if(drawLCD == true)
-        {
-          // Print a message to the LCD.
-          lcd.clear();
-          lcd.setCursor(0, 0);
-          lcd.print("ERROR");
-          drawLCD = false;
-        }
       break;
     default: // STOP
       // stopped, no need to move anywhere
       // Print a message to the LCD ?
-
       break;
   }
 
   // read inputs from control panel
   FilmScanner.readControlPanel();
-  FilmScanner.debugControlPanel(); // print inputs from control panel (only for debugging)
+  //FilmScanner.debugControlPanel(); // print inputs from control panel (only for debugging)
 
   FilmScanner.readEncoder(); // >> move to interrupt function
   
@@ -235,3 +170,94 @@ void loop()
 //    FilmScanner.readEncoder();
 //    my_delay = constrain((100+(FilmScanner.getEncoderCounter()*10.0)), 100,5000);
 //}
+
+
+void printLCD (int mode)
+{
+  switch (mode)
+  {
+    case 0:
+      // Print a message to the LCD.
+      lcd.backlight();
+      lcd.setCursor(0, 0);
+      lcd.print("Film scanner 0.1");
+      lcd.setCursor(0,1);
+      lcd.print("Starting...");
+      delay(1000);
+      break;
+    case 1:
+      if(drawLCD == true)
+      {
+        // Print a message to the LCD.
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Reel-To-Reel");
+        drawLCD=false;
+      }   
+      drawLCD_stopped=true;
+      break;
+    case 2:
+      if(drawLCD == true)
+      {
+        // Print a message to the LCD (only once)
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Recording");
+        lcd.setCursor(0,1);
+        lcd.print("FC:");
+        drawLCD=false;
+        drawLCD_stopped=true;
+      } 
+      // Print a message to the LCD (continuously)
+      lcd.setCursor(4,1);
+      lcd.print(String(saved_frames_count));
+    break;
+    case 3:
+     if(drawLCD == true)
+      {
+        // Print a message to the LCD (only once)
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Playing");
+        drawLCD=false;
+        drawLCD_stopped=true;
+      }
+    break;
+    case 4:
+      if(drawLCD == true)
+      {
+        // Print a message to the LCD (only once)
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Play Backwards");
+        drawLCD = false;
+      }
+    break;
+    case 5:
+      if(drawLCD_stopped==true)
+      {
+        // Print a message to the LCD (only once)
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Stopped");
+        lcd.setCursor(0,1);
+        lcd.print("Speed:");
+        drawLCD = true;
+        drawLCD_stopped=false;
+      }    
+      // Print a message to the LCD (continuously)
+      lcd.setCursor(6,1);
+      lcd.print(String(my_delay));
+    break;
+    case 6:
+      if(drawLCD == true)
+      {
+        // Print a message to the LCD.
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("ERROR");
+        drawLCD = false;
+      }
+    break;
+  }
+}

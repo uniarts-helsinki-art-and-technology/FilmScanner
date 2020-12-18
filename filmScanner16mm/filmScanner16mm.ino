@@ -44,8 +44,8 @@ void setup() {
 
   FilmScanner.setControlPanelButtonPins(36,38,40,42,44,46,48,50); // Input pins in following order: multi_jog,stop,playback,play,rec,rw,ffw,reel-to-reel
   FilmScanner.setupEncoder(18,19,20);
-//  attachInterrupt(digitalPinToInterrupt(18), updateEncoder, CHANGE);
-//  attachInterrupt(digitalPinToInterrupt(19), updateEncoder, CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(18), updateEncoder, CHANGE); // TODO: add interrupt
+//  attachInterrupt(digitalPinToInterrupt(19), updateEncoder, CHANGE); // TODO: add interrupt
   FilmScanner.setGateSensorToPin(52);
 
   FilmScanner.setupMotor(m1,2,3,4);
@@ -248,7 +248,8 @@ void printLCD (int mode)
       }    
       // Print a message to the LCD (continuously)
       lcd.setCursor(6,1);
-      //lcd.print("    ");
+      lcd.print("....");
+      lcd.setCursor(6,1);
       lcd.print(String(my_delay));
     break;
     case 6:

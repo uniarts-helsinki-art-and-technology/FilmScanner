@@ -131,7 +131,7 @@ void loop()
         FilmScanner.moveOneFrame(m1,m_gate);
         printLCD(4);
         // pause always after single frame is moved
-        delay(1000);
+        delay(my_delay);
       }
       // STOPPED
       else

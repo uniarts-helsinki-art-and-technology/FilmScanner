@@ -536,20 +536,22 @@ if(digitalRead(reel_master_switch.pin) == HIGH) // TSEKKAA KELAUS
     else
     {
       delay(1); // delay in between reads for stability
-      
-      if(is_rewinding == true)
+        
+      // TODO: WAIT UNTIL RWND IS STOPPED
+      if(mode!=2)
       {
-        // REEL TO REEL SWITCH IS OFF, GENTLY STOP RWND
-        slowDownRewinding();
+        //setMode(2); 
+        mode = 2; // PLAY MODE
       }
+        
+      //if(is_rewinding == true)
+    //  {
+        // REEL TO REEL SWITCH IS OFF, GENTLY STOP RWND
+      //  slowDownRewinding();
+    //  }
       else if (is_playing == false)
       {
-        // WAIT UNTIL RWND IS STOPPED
-        if(mode!=2)
-        {
-          //setMode(2); 
-          mode = 2; // PLAY MODE
-        }
+
         
         multi_jog.pressed = false; // default to make button click possible
         

@@ -344,7 +344,8 @@ void FilmScanner::rewinding(StepperMotor &m)
     rewindOneStep(m,delay_ramp);
     }
   }
-  while( ffw_button.pressed || rw_button.pressed  );
+  while( ffw_button_down || rw_button_down );
+//  while( ffw_button.pressed || rw_button.pressed  );
 }
 
 void FilmScanner::rewinding(StepperMotor &m1, StepperMotor &m2)
@@ -387,7 +388,8 @@ void FilmScanner::rewinding(StepperMotor &m1, StepperMotor &m2)
       }   
     }*/
   }
-  while( (ffw_button.pressed || rw_button.pressed ) );
+  while( ffw_button_down || rw_button_down );
+ // while( (ffw_button.pressed || rw_button.pressed ) );
  // while( (ffw_button.pressed || rw_button.pressed ) && digitalRead(gate_sensor.pin)==LOW);
 
   
@@ -499,8 +501,8 @@ if(digitalRead(reel_master_switch.pin) == HIGH) // TSEKKAA KELAUS
           ffw_button.pressed = true;
           if(ffw_button_down == false)
           {
-          running_direction_set=false;
-          ffw_button_down=true;
+            running_direction_set=false;
+            ffw_button_down=true;
           }
           running_direction = true;
           speedUpRewinding();
@@ -512,8 +514,8 @@ if(digitalRead(reel_master_switch.pin) == HIGH) // TSEKKAA KELAUS
           rw_button.pressed = true;
                     if(rw_button_down == false)
           {
-          running_direction_set=false;
-                    rw_button_down=true;
+              running_direction_set=false;
+              rw_button_down=true;
           }
           running_direction = false;
           speedUpRewinding();

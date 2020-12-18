@@ -115,7 +115,7 @@ void loop()
       {
         FilmScanner.setMotorDirectionForward(m1,m2,m_gate);
         FilmScanner.unlockMotor(m1);
-        FilmScanner.lockMotor(m1);
+        FilmScanner.lockMotor(m2);
         FilmScanner.lockMotor(m_gate);
         FilmScanner.moveOneFrame(m2,m_gate);
 

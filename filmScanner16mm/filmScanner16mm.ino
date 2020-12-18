@@ -160,7 +160,8 @@ void loop()
   FilmScanner.readControlPanel();
   //FilmScanner.debugControlPanel(); // print inputs from control panel (only for debugging)
 
-  FilmScanner.readEncoder(); // >> move to interrupt function
+  FilmScanner.readEncoder(); // >> TODO: move to interrupt function
+  my_delay = constrain((100+(FilmScanner.getEncoderCounter()*100.0)), 100,5000);
   
 }
 
@@ -247,6 +248,7 @@ void printLCD (int mode)
       }    
       // Print a message to the LCD (continuously)
       lcd.setCursor(6,1);
+      //lcd.print("    ");
       lcd.print(String(my_delay));
     break;
     case 6:

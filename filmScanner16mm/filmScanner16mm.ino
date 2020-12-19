@@ -6,7 +6,7 @@
     |                                                    |
     |      description: code for 16mm telecine machine . | 
     |                                                    |
-    |                  date: 11.12.2020                   |
+    |                  date: 18.12.2020                   |
     |                                                    |
     ^----------------------------------------------------^
 
@@ -30,8 +30,6 @@ unsigned long saved_frames_count=0;
 int my_delay= 100;
 bool drawLCD = true;
 bool drawLCD_stopped = true;
-
-bool printToLcd = true;
 
 FilmScanner FilmScanner(0); // modes 0=stopped, 1=rewind, 2=play
 StepperMotor m1, m2, m_gate;

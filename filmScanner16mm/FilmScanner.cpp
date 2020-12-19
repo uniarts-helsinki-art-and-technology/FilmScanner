@@ -338,21 +338,15 @@ void FilmScanner::moveOneFrame(StepperMotor &m1, StepperMotor &m2, StepperMotor 
 
 void FilmScanner::rewinding(StepperMotor &m)
 {
-  do {
     for (int i=0; i<500; i++)
     {
-    rewindOneStep(m,delay_ramp);
+      rewindOneStep(m,delay_ramp);
     }
-  }
-  while( ffw_button_down || rw_button_down );
-//  while( ffw_button.pressed || rw_button.pressed  );
 }
 
 void FilmScanner::rewinding(StepperMotor &m1, StepperMotor &m2)
 {
   //Forward 1000 steps? TODO: CHOOSE ANOTHER HARD CODED VALUE?
-
-  do {
     for (int i=0; i<500; i++)
     {
     rewindOneStep(m1,m2,delay_ramp);
@@ -387,17 +381,13 @@ void FilmScanner::rewinding(StepperMotor &m1, StepperMotor &m2)
         Serial.println("Stop rewinding,, delay ramp: "+String(delay_ramp));
       }   
     }*/
-  }
-  while( ffw_button_down || rw_button_down );
- // while( (ffw_button.pressed || rw_button.pressed ) );
- // while( (ffw_button.pressed || rw_button.pressed ) && digitalRead(gate_sensor.pin)==LOW);
 
   
 
  
- // for (int i=0; i<500; i++)
- // {
-//        rewindOneStep(m1,m2,delay_ramp);
+// for (int i=0; i<500; i++)
+// {
+//      rewindOneStep(m1,m2,delay_ramp);
 /*
         // Do not detect switch state until StepperMotor has rotated
         if(i>150 && i % 10 == 0)
@@ -512,7 +502,7 @@ if(digitalRead(reel_master_switch.pin) == HIGH) // TSEKKAA KELAUS
         {
           delay(1);
           rw_button.pressed = true;
-                    if(rw_button_down == false)
+          if(rw_button_down == false)
           {
               running_direction_set=false;
               rw_button_down=true;
@@ -530,20 +520,19 @@ if(digitalRead(reel_master_switch.pin) == HIGH) // TSEKKAA KELAUS
           stopRewinding(); // TODO: CHANGE TO RAMP
           ffw_button_down=false;
           rw_button_down=false;
-
         }
     }
     else
     {
       delay(1); // delay in between reads for stability
         
-      // TODO: WAIT UNTIL RWND IS STOPPED
       if(mode!=2)
       {
         //setMode(2); 
         mode = 2; // PLAY MODE
       }
-        
+
+       // TODO: WAIT UNTIL RWND IS STOPPED
       //if(is_rewinding == true)
     //  {
         // REEL TO REEL SWITCH IS OFF, GENTLY STOP RWND
@@ -897,7 +886,7 @@ bool FilmScanner::isRunningForwards(){
 
 bool FilmScanner::isRewindingForwards()
 {
-    if(running_direction == true && is_rewinding==true)
+  if(running_direction == true && is_rewinding==true)
   {
     return true;
   }

@@ -16,32 +16,36 @@ void FilmScanner::disableDebugMode(){
   debugMode = false;
 }
 
-void FilmScanner::setupMotor(StepperMotor &m, byte pulse_pin, byte direction_pin, byte enable_pin){
-        m.pulse_pin = pulse_pin;
-        m.direction_pin = direction_pin;
-        m.enable_pin = enable_pin;
-        m.enabled = ENABLED;
-
-        pinMode (m.pulse_pin, OUTPUT);
-        pinMode (m.direction_pin, OUTPUT);
-        pinMode (m.enable_pin, OUTPUT);
-        delay(1);
-        digitalWrite(m.enable_pin,ENABLED);
-        delay(1);
+void FilmScanner::setupMotor(StepperMotor &m, byte pulse_pin, byte direction_pin, byte enable_pin)
+{
+  m.pulse_pin = pulse_pin;
+  m.direction_pin = direction_pin;
+  m.enable_pin = enable_pin;
+  m.enabled = ENABLED;
+  pinMode (m.pulse_pin, OUTPUT);
+  pinMode (m.direction_pin, OUTPUT);
+  pinMode (m.enable_pin, OUTPUT);
+  delay(1);
+  digitalWrite(m.enable_pin,ENABLED);
+  delay(1);
 }
 
-void FilmScanner::setupEncoder(byte _a,byte _b,byte _sw)
+void FilmScanner::setEncoderPins(byte _a,byte _b,byte _sw)
 {
-    enc.pin_A = _a;
-    enc.pin_B = _b;
-    enc.pin_Switch = _sw;
-    
-    pinMode(enc.pin_A,INPUT_PULLUP);
-    pinMode(enc.pin_B,INPUT_PULLUP);
-    pinMode(enc.pin_Switch, INPUT_PULLUP);
-    
-    // Read the initial state of CLK
-    enc.lastStateA = digitalRead(enc.pin_A);
+  enc.pin_A = _a;
+  enc.pin_B = _b;
+  enc.pin_Switch = _sw;   
+  pinMode(enc.pin_A,INPUT_PULLUP);
+  pinMode(enc.pin_B,INPUT_PULLUP);
+  pinMode(enc.pin_Switch, INPUT_PULLUP);
+  // Read the initial state of CLK
+  enc.lastStateA = digitalRead(enc.pin_A);
+}
+
+void FilmScanner::setCameraRemoteControlPin(byte capture)
+{
+  capture_output.pin = capture;
+  pinMode(capture_output.pin,OUTPUT);
 }
 
 
@@ -52,26 +56,30 @@ void FilmScanner::readEncoder()
 
   // If last and current state of pin A (CLK) are different, then pulse occurred
   // React to only 1 state change to avoid double count
-  if (enc.currentStateA != enc.lastStateA  && enc.currentStateA == 1){
+  if (enc.currentStateA != enc.lastStateA  && enc.currentStateA == 1)
+  {
 
     // If the pin B (DT) state is different than the CLK state then
     // the encoder is rotating CCW
-    if (digitalRead(enc.pin_B) != enc.currentStateA) {
+    if (digitalRead(enc.pin_B) != enc.currentStateA)
+    {
       enc.counter --;
       enc.currentDir ="CCW";
-    } else {
+    }
+    else
+    {
       // Encoder is rotating CW
       enc.counter ++;
       enc.currentDir ="CW";
     }
     
-  if(debugMode==true){
+    if(debugMode==true)
+    {
       Serial.print("Direction: ");
       Serial.print(enc.currentDir);
       Serial.print(" | Counter: ");
       Serial.println(enc.counter);
-  }
-    
+    }
   }
 
   // Remember last state of pin A (CLK)
@@ -80,11 +88,12 @@ void FilmScanner::readEncoder()
   // Read the button state
   int btnState = digitalRead(enc.pin_Switch);
 
-  //If we detect LOW signal, button is pressed
+  // If we detect LOW signal, button is pressed
   if (btnState == LOW) {
-    //if 50ms have passed since last LOW pulse, it means that the
-    //button has been pressed, released and pressed again
-    if (debugMode==true && millis() - enc.lastButtonPress > 50) {
+    // If 50ms have passed since last LOW pulse, it means that the
+    // button has been pressed, released and pressed again
+    if (debugMode==true && millis() - enc.lastButtonPress > 50)
+    {
       Serial.println("Button pressed!");
     }
     
@@ -101,43 +110,42 @@ int FilmScanner::getEncoderCounter()
   return enc.counter;
 }
 
-void FilmScanner::setControlPanelButtonPins(byte multi_jog_b,byte stop_b,byte playb_b,byte play_b,byte rec_b,byte rw_b,byte ffw_b, byte reel_b){
-
-        setupButton(multi_jog, multi_jog_b);
-        setupButton(stop_button, stop_b);
-        setupButton(play_backwards_button, playb_b);
-        setupButton(play_button, play_b);
-        setupButton(rec_button, rec_b);
-        setupButton(rw_button, rw_b);
-        //TODO: setupInterruptButton(rw_button, rw_b);
-        setupButton(ffw_button, ffw_b);
-        //TODO: setupInterruptButton(ffw_button, ffw_b);
-        setupButton(reel_master_switch, reel_b);
+void FilmScanner::setControlPanelButtonPins(byte multi_jog_b,byte stop_b,byte playb_b,byte play_b,byte rec_b,byte rw_b,byte ffw_b, byte reel_b)
+{
+  setupButton(multi_jog, multi_jog_b);
+  setupButton(stop_button, stop_b);
+  setupButton(play_backwards_button, playb_b);
+  setupButton(play_button, play_b);
+  setupButton(rec_button, rec_b);
+  setupButton(rw_button, rw_b);
+  //TODO: setupInterruptButton(rw_button, rw_b);
+  setupButton(ffw_button, ffw_b);
+  //TODO: setupInterruptButton(ffw_button, ffw_b);
+  setupButton(reel_master_switch, reel_b);
 }
 
-void FilmScanner::setupButton(button &b, byte pin){
-        b.pin = pin;
-        b.pressed = false;
-        pinMode (b.pin, INPUT);
-        delay(1);
+void FilmScanner::setupButton(button &b, byte pin)
+{
+  b.pin = pin;
+  pinMode (b.pin, INPUT);
+  delay(1);
         
-        if(debugMode==true){
-          Serial.println("Button set to pin "+String(pin));
-        //  debug.printf("Button set to pin %c\n",pin);
-        }
+  if(debugMode==true)
+  {
+    Serial.println("Button set to pin "+String(pin));
+  }
 }
 
 void FilmScanner::setupInterruptButton(button &b, byte pin){
-        b.pin = pin;
-        b.pressed = false;
-        pinMode (b.pin, INPUT);
-     // TODO: attachInterrupt(digitalPinToInterrupt(18), interruptRewinding, LOW);// pins on MEGA 2, 3, 18, 19, 20, 21
-        delay(1);
+  b.pin = pin;
+  pinMode (b.pin, INPUT);
+  // TODO: attachInterrupt(digitalPinToInterrupt(18), interruptRewinding, LOW);// pins on MEGA 2, 3, 18, 19, 20, 21
+  delay(1);
         
-        if(debugMode==true){
-          Serial.println("Interrupt button set to pin "+String(pin));
-        //  debug.printf("Button set to pin %c\n",pin);
-        }
+  if(debugMode==true)
+  {
+    Serial.println("Interrupt button set to pin "+String(pin));
+  }
 }
 
 void FilmScanner::interruptRewinding()
@@ -145,41 +153,46 @@ void FilmScanner::interruptRewinding()
   is_rewinding = false;
 }
 
-void FilmScanner::setupSensor(sensor &s, byte pin){
-        s.pin = pin;
-        s.pressed = false;
-        pinMode (s.pin, INPUT);
-        delay(1);
+void FilmScanner::setupSensor(sensor &s, byte pin)
+{
+  s.pin = pin;
+  s.pressed = false;
+  pinMode (s.pin, INPUT);
+  delay(1);
         
-        if(debugMode==true){
-          Serial.println("Sensor set to pin "+String(pin));
-          //debug.printf("Sensor set to pin %c\n",pin);
-
-        }
+  if(debugMode==true)
+  {
+    Serial.println("Sensor set to pin "+String(pin));
+  }
 }
 
 void FilmScanner::setGateSensorToPin(byte pin){
-        gate_sensor.pin = pin;
-        gate_sensor.pressed = false;
-        pinMode (gate_sensor.pin, INPUT);
-        if(debugMode==true){
-          Serial.println("Gate sensor set to pin "+String(pin));
-          //debug.printf("Gate sensor set to pin %c\n",pin);
-        }
+  gate_sensor.pin = pin;
+  gate_sensor.pressed = false;
+  pinMode (gate_sensor.pin, INPUT);
+  delay(1);
+
+  if(debugMode==true)
+  {
+    Serial.println("Gate sensor set to pin "+String(pin));
+  }
 }
 
-void FilmScanner::setMode(byte m){
-        mode = m;
-        if(debugMode==true){
-          Serial.println("Mode set to "+String(m));
-          //debug.printf("Mode set to %c\n",m);
-        }
+void FilmScanner::setMode(byte m)
+{
+  mode = m;
+  if(debugMode==true)
+  {
+    Serial.println("Mode set to "+String(m));
+  }
 }
 
-byte FilmScanner::getMode(){      
-        return mode;
+byte FilmScanner::getMode()
+{      
+  return mode;
 }
 
+// POISTA
 //void FilmScanner::setDelay(int d){
 //        pulse_delay = constrain(d, min_delay,max_delay);
 //        if(debugMode==true){
@@ -188,57 +201,58 @@ byte FilmScanner::getMode(){
 //        } 
 //}
 
+// POISTA
 //int FilmScanner::getPulseDelay(){
 //       return pulse_delay;
 //}
 
 void FilmScanner::moveOneStep(StepperMotor &m)
 {
-        digitalWrite(m.pulse_pin,HIGH);
-        delayMicroseconds(min_delay);
-        digitalWrite(m.pulse_pin,LOW);
-        delayMicroseconds(pulse_delay);
+  digitalWrite(m.pulse_pin,HIGH);
+  delayMicroseconds(min_delay);
+  digitalWrite(m.pulse_pin,LOW);
+  delayMicroseconds(pulse_delay);
 }
 
 void FilmScanner::moveOneStep(StepperMotor &m1, StepperMotor &m2)
 {
-        digitalWrite(m1.pulse_pin,HIGH);
-        digitalWrite(m2.pulse_pin,HIGH);
-        delayMicroseconds(min_delay);
-        digitalWrite(m1.pulse_pin,LOW);
-        digitalWrite(m2.pulse_pin,LOW);
-        delayMicroseconds(pulse_delay);
+  digitalWrite(m1.pulse_pin,HIGH);
+  digitalWrite(m2.pulse_pin,HIGH);
+  delayMicroseconds(min_delay);
+  digitalWrite(m1.pulse_pin,LOW);
+  digitalWrite(m2.pulse_pin,LOW);
+  delayMicroseconds(pulse_delay);
 }
 
 void FilmScanner::moveOneStep(StepperMotor &m1, StepperMotor &m2, StepperMotor &m3)
 {
-        digitalWrite(m1.pulse_pin,HIGH);
-        digitalWrite(m2.pulse_pin,HIGH);
-        digitalWrite(m3.pulse_pin,HIGH);
-        delayMicroseconds(min_delay);
-        digitalWrite(m1.pulse_pin,LOW);
-        digitalWrite(m2.pulse_pin,LOW);
-        digitalWrite(m3.pulse_pin,LOW);
-        delayMicroseconds(pulse_delay);
+  digitalWrite(m1.pulse_pin,HIGH);
+  digitalWrite(m2.pulse_pin,HIGH);
+  digitalWrite(m3.pulse_pin,HIGH);
+  delayMicroseconds(min_delay);
+  digitalWrite(m1.pulse_pin,LOW);
+  digitalWrite(m2.pulse_pin,LOW);
+  digitalWrite(m3.pulse_pin,LOW);
+  delayMicroseconds(pulse_delay);
 }
 
 
 void FilmScanner::rewindOneStep(StepperMotor &m, int d)
 {
-        digitalWrite(m.pulse_pin,HIGH);
-        delayMicroseconds(min_delay);
-        digitalWrite(m.pulse_pin,LOW);
-        delayMicroseconds(min_delay+d);
+  digitalWrite(m.pulse_pin,HIGH);
+  delayMicroseconds(min_delay);
+  digitalWrite(m.pulse_pin,LOW);
+  delayMicroseconds(min_delay+d);
 }
 
 void FilmScanner::rewindOneStep(StepperMotor &m1, StepperMotor &m2, int d)
 {
-        digitalWrite(m1.pulse_pin,HIGH);
-        digitalWrite(m2.pulse_pin,HIGH);
-        delayMicroseconds(min_delay);
-        digitalWrite(m1.pulse_pin,LOW);
-        digitalWrite(m2.pulse_pin,LOW);
-        delayMicroseconds(min_delay+d);
+  digitalWrite(m1.pulse_pin,HIGH);
+  digitalWrite(m2.pulse_pin,HIGH);
+  delayMicroseconds(min_delay);
+  digitalWrite(m1.pulse_pin,LOW);
+  digitalWrite(m2.pulse_pin,LOW);
+  delayMicroseconds(min_delay+d);
 }
 
 void FilmScanner::moveOneFrame(StepperMotor &m1, StepperMotor &m2)
@@ -338,9 +352,9 @@ void FilmScanner::moveOneFrame(StepperMotor &m1, StepperMotor &m2, StepperMotor 
 
 void FilmScanner::rewinding(StepperMotor &m)
 {
-    for (int i=0; i<500; i++)
+    for (int i=0; i<500; i++) // TODO: Miten looppi muokataan jatkuvaksi?
     {
-      rewindOneStep(m,delay_ramp);
+      rewindOneStep(m,0); // TODO: USE delay_ramp here instead of 0
     }
 }
 
@@ -388,6 +402,7 @@ void FilmScanner::rewinding(StepperMotor &m1, StepperMotor &m2)
 // for (int i=0; i<500; i++)
 // {
 //      rewindOneStep(m1,m2,delay_ramp);
+
 /*
         // Do not detect switch state until StepperMotor has rotated
         if(i>150 && i % 10 == 0)
@@ -449,122 +464,119 @@ void FilmScanner::rewinding(StepperMotor &m1, StepperMotor &m2)
 
 void FilmScanner::speedUpRewinding()
 {
-        nopeutuva = true;
-        hidastuva = false;
-        delay_ramp = max_delay;
-        is_rewinding = true;
+  nopeutuva = true;
+  hidastuva = false;
+  delay_ramp = max_delay;
+  is_rewinding = true;
 }
 void FilmScanner::slowDownRewinding()
 {
-        hidastuva = true;
+  hidastuva = true;
 }
 
 void FilmScanner::stopRewinding()
 {
-        is_rewinding = false;
-        nopeutuva = false;
-        hidastuva = false;
+  is_rewinding = false;
+  nopeutuva = false;
+  hidastuva = false;
 }
 
 
-void FilmScanner::readControlPanel(){
+void FilmScanner::readControlPanel()
+{
+  delay(1);
 
-if(digitalRead(reel_master_switch.pin) == HIGH) // TSEKKAA KELAUS
+  if(digitalRead(reel_master_switch.pin) == HIGH)
+  {
+    delay(1);
+     
+    if(is_playing == true)
     {
-      // KELAUS MODE
-      if(mode!=1)
-      {
-        //setMode(1); // WINDING MODE
-        mode = 1;
-      }
-      if(is_playing == true)
-      {
-        stopPlaying();
-      }
-      
-      rw_button.pressed = false;
-      ffw_button.pressed = false;
-
-        if(digitalRead(ffw_button.pin) == HIGH)
-        {
-          delay(1);
-          ffw_button.pressed = true;
-          if(ffw_button_down == false)
-          {
-            running_direction_set=false;
-            ffw_button_down=true;
-          }
-          running_direction = true;
-          speedUpRewinding();
-          
-        }
-        else if(digitalRead(rw_button.pin) == HIGH)
-        {
-          delay(1);
-          rw_button.pressed = true;
-          if(rw_button_down == false)
-          {
-              running_direction_set=false;
-              rw_button_down=true;
-          }
-          running_direction = false;
-          speedUpRewinding();
-          
-        }
-        else
-        {
-          delay(1);
-          if(is_rewinding == true){
-            slowDownRewinding();
-          }
-          stopRewinding(); // TODO: CHANGE TO RAMP
-          ffw_button_down=false;
-          rw_button_down=false;
-        }
+      stopPlaying();
+      stopRecording();
     }
-    else
+      
+    if(digitalRead(ffw_button.pin) == HIGH)
     {
+      delay(1);
+      mode = 2; // REEL-TO-REEL: FFW
+      
+      if(ffw_button_down == false)
+      {
+        running_direction_set=false;
+        ffw_button_down=true;
+      }
+        running_direction = true;
+        speedUpRewinding();       
+    }
+    else if(digitalRead(rw_button.pin) == HIGH)
+    {
+      delay(1);
+      mode = 3; // REEL-TO-REEL: RW
+        
+      if(rw_button_down == false)
+      {
+        running_direction_set=false;
+        rw_button_down=true;
+      }
+        running_direction = false;
+        speedUpRewinding(); 
+      }
+      else
+      {
+        delay(1);
+        mode = 1; // REEL-TO-REEL: STOP
+
+        if(is_rewinding == true)
+        {
+          slowDownRewinding();
+        }
+        stopRewinding(); // TODO: CHANGE TO RAMP
+        ffw_button_down=false;
+        rw_button_down=false;
+      }
+  }
+  else
+  {
+    // PLAY MODE
+
       delay(1); // delay in between reads for stability
         
-      if(mode!=2)
-      {
-        //setMode(2); 
-        mode = 2; // PLAY MODE
-      }
-
-       // TODO: WAIT UNTIL RWND IS STOPPED
+     // TODO: WAIT UNTIL RWND IS STOPPED
       //if(is_rewinding == true)
     //  {
         // REEL TO REEL SWITCH IS OFF, GENTLY STOP RWND
       //  slowDownRewinding();
     //  }
-      else if (is_playing == false)
+    
+      if (is_playing == false) // better:  mode == 6
       {
-
-        
-        multi_jog.pressed = false; // default to make button click possible
+                
+     //   multi_jog.pressed = false; // default to make button click possible
         
         if(digitalRead(rec_button.pin) == HIGH)
         {
           delay(1); // delay in between reads for stability
-          // START PLAY AND REC
-          rec_button.pressed = true;
+          mode = 4; // PLAY AND REC
           startPlayingForwards();
-          startRecording(); // >> TODO: more simple version make var public and use it directly: is_recording=true;
+          startRecording();
         }
         else if (digitalRead(play_button.pin) == HIGH)
         {
           delay(1); // delay in between reads for stability
-          // START PLAY
-          play_button.pressed = true;
+          mode = 4; // PLAY
           startPlayingForwards();
         }
         else if(digitalRead(play_backwards_button.pin) == HIGH)
         {
           delay(1); // delay in between reads for stability
-          // START PLAY BACKWARDS
-          play_backwards_button.pressed = true;
+          mode = 5; // PLAY BACKWARDS
           startPlayingBackwards();
+        }
+        else
+        {
+          delay(1); // delay in between reads for stability
+          mode = 6; // STOPPED
         }
       }
       else
@@ -574,151 +586,69 @@ if(digitalRead(reel_master_switch.pin) == HIGH) // TSEKKAA KELAUS
         if(digitalRead(stop_button.pin) == HIGH)
         {
           delay(1); // delay in between reads for stability
-          // STOP PLAY (AND REC)
-          stop_button.pressed = true;
+          mode = 6; // STOP (PLAY + REC)
           stopPlaying();
-          if(is_recording==true)
-          {
-            stopRecording();
-          }
+          stopRecording();
         }
       }
       delay(1); // delay in between reads for stability
     }
 }
 
-void FilmScanner::debugControlPanel(){
-
-
-if(digitalRead(reel_master_switch.pin) == HIGH) // TSEKKAA KELAUS
-    {
-      // KELAUS MODE
-      /*if(mode!=1)
-      {
-        //setMode(1); // WINDING MODE
-        mode = 1;
-      }
-      if(is_playing == true){
-        stopPlaying();
-      }*/
-
-      rw_button.pressed = false;
-      ffw_button.pressed = false;
-
-        if(digitalRead(ffw_button.pin) == HIGH)
-        {
-          delay(1);
-          Serial.println("FilmScanner FFW button connect to pin: "+String(ffw_button.pin)+" is pressed");
-
-        }
-        else if(digitalRead(rw_button.pin) == HIGH)
-        {
-          delay(1);
-          Serial.println("FilmScanner RW button connect to pin: "+String(rw_button.pin)+" is pressed");
-
-        }
-        else
-        {
-          delay(1);
-          Serial.println("FilmScanner reel-to-reel connect to pin: "+String(reel_master_switch.pin)+" is on");
-        }
-    }
-    else
-    {
-      delay(1); // delay in between reads for stability
-      
-     /* if(is_rewinding == true)
-      {
-        // REEL TO REEL SWITCH IS OFF, GENTLY STOP RWND
-        slowDownRewinding();
-      }
-      else */
-      if (is_playing == false)
-      {
-        // WAIT UNTIL RWND IS STOPPED
-      /*  if(mode!=2)
-        {
-          //setMode(2); 
-          mode = 2; // PLAY MODE
-        }*/
-        
-        multi_jog.pressed = false; // default to make button click possible
-        
-        if(digitalRead(rec_button.pin) == HIGH)
-        {
-          delay(1); // delay in between reads for stability
-          // START PLAY AND REC
-          Serial.println("FilmScanner REC button connect to pin: "+String(rec_button.pin)+" is pressed");
-        }
-        else if (digitalRead(play_button.pin) == HIGH)
-        {
-          delay(1); // delay in between reads for stability
-          // START PLAY
-          Serial.println("FilmScanner PLAY button connect to pin: "+String(play_button.pin)+" is pressed");
-        }
-        else if(digitalRead(play_backwards_button.pin) == HIGH)
-        {
-          delay(1); // delay in between reads for stability
-          // START PLAY BACKWARDS
-          Serial.println("FilmScanner PLAY BACK button connect to pin: "+String(play_backwards_button.pin)+" is pressed");
-        }
-      }
-      else
-      {
-        // WHILE PLAYING
-        
-        if(digitalRead(stop_button.pin) == HIGH)
-        {
-          delay(1); // delay in between reads for stability
-          // STOP PLAY (AND REC)
-          Serial.println("FilmScanner STOP button connect to pin: "+String(stop_button.pin)+" is pressed");
-        }
-      }
-      delay(1); // delay in between reads for stability
-    }
-
-
-  /*
-  if(debugMode==true)
+void FilmScanner::debugControlPanel()
+{
+  delay(1);
+  if(digitalRead(reel_master_switch.pin) == HIGH) // TSEKKAA KELAUS
   {
-    if(digitalRead(reel_master_switch.pin) == HIGH)
+    // REEL-TO-REEL MODE
+    if(digitalRead(ffw_button.pin) == HIGH)
     {
-      Serial.println("FilmScanner reel-to-reel connect to pin: "+String(reel_master_switch.pin)+" is on");
-    
-      if(digitalRead(ffw_button.pin) == HIGH)
-      {
-        Serial.println("FilmScanner FFW button connect to pin: "+String(ffw_button.pin)+" is pressed");
-      }
-      else if(digitalRead(rw_button.pin) == HIGH)
-      {
-        Serial.println("FilmScanner RW button connect to pin: "+String(rw_button.pin)+" is pressed");
-      }
+      delay(1);
+      Serial.println("FilmScanner FFW button connect to pin: "+String(ffw_button.pin)+" is pressed");
+    }
+    else if(digitalRead(rw_button.pin) == HIGH)
+    {
+      delay(1);
+      Serial.println("FilmScanner RW button connect to pin: "+String(rw_button.pin)+" is pressed");
     }
     else
     {
-      if(digitalRead(play_button.pin) == HIGH){
-        Serial.println("FilmScanner PLAY button connect to pin: "+String(play_button.pin)+" is pressed");
-      }
-      else if(digitalRead(play_backwards_button.pin) == HIGH)
-      {
-        Serial.println("FilmScanner PLAY BACKWARDS button connect to pin: "+String(play_backwards_button.pin)+" is pressed");
-      }
-      else if(digitalRead(stop_button.pin) == HIGH)
-      {
-        Serial.println("FilmScanner STOP button connect to pin: "+String(stop_button.pin)+" is pressed");
-      }
-      else if(digitalRead(rec_button.pin) == HIGH)
-      {
-        Serial.println("FilmScanner REC button connect to pin: "+String(rec_button.pin)+" is pressed");
-      }
-      else if(multi_jog.pin==true)
-      {
-        Serial.println("Multi jog button connect to pin: "+String(multi_jog.pin)+" is pressed");
-      } 
+      delay(1);
+      Serial.println("FilmScanner reel-to-reel connect to pin: "+String(reel_master_switch.pin)+" is on");
     }
-  delay(1);        // delay in between reads for stability
   }
-  */
+  else
+  {
+    // PLAY MODE
+    delay(1);
+                
+    if(digitalRead(rec_button.pin) == HIGH)
+    {
+      delay(1);
+      // START PLAY AND REC
+      Serial.println("FilmScanner REC button connect to pin: "+String(rec_button.pin)+" is pressed");
+    }
+    else if (digitalRead(play_button.pin) == HIGH)
+    {
+      delay(1); // delay in between reads for stability
+      // START PLAY
+      Serial.println("FilmScanner PLAY button connect to pin: "+String(play_button.pin)+" is pressed");
+    }
+    else if(digitalRead(play_backwards_button.pin) == HIGH)
+    {
+      delay(1); // delay in between reads for stability
+      // START PLAY BACKWARDS
+      Serial.println("FilmScanner PLAY BACK button connect to pin: "+String(play_backwards_button.pin)+" is pressed");
+    }
+    else if(digitalRead(stop_button.pin) == HIGH)
+    {
+      delay(1); // delay in between reads for stability
+      // STOP PLAY (AND REC)
+      Serial.println("FilmScanner STOP button connect to pin: "+String(stop_button.pin)+" is pressed");
+    }
+      // multi_jog.pressed = false; // TODO: Add multi-jog functionality, default to make button click possible
+  }
+  delay(1); // delay in between reads for stability
 }
 
 
@@ -736,52 +666,18 @@ void FilmScanner::startPlayingBackwards()
   is_playing = true;
 }
 
-bool FilmScanner::isPlayingForwards()
-{
- if(running_direction == true && is_playing==true)
- {
-   return true;
- }
- else
- {
-  return false; 
- }
-}
-
-bool FilmScanner::isPlayingBackwards()
-{
- if(running_direction == false && is_playing==true)
- {
-   return true;
- }
- else
- {
-  return false; 
- }
-}
-
 void FilmScanner::stopPlaying()
 {
-  setMode(0); // RESET TO DEFAULT
-  play_button.pressed = false;
-  play_backwards_button.pressed = false;
-  stop_button.pressed = false;
-  rec_button.pressed = false;
-  
-  running_direction = FORWARDS; // set to default
   is_playing = false;
 }
 
-//bool FilmScanner::isRewinding()
-//{
-//  return is_rewinding;
-//}
-
-void FilmScanner::startRecording(){
+void FilmScanner::startRecording()
+{
   is_recording = true;
 }
 
-void FilmScanner::stopRecording(){
+void FilmScanner::stopRecording()
+{
   is_recording = false;
 }
 
@@ -789,23 +685,26 @@ bool FilmScanner::isRecording(){
   return is_recording;
 }
 
-void FilmScanner::lockMotor(StepperMotor &m){
+void FilmScanner::lockMotor(StepperMotor &m)
+{
   if(m.enabled == DISABLED)
   {
-        digitalWrite(m.enable_pin,ENABLED);
-        m.enabled = ENABLED;
+    digitalWrite(m.enable_pin,ENABLED);
+    m.enabled = ENABLED;
   }
 }
 
-void FilmScanner::unlockMotor(StepperMotor &m){
+void FilmScanner::unlockMotor(StepperMotor &m)
+{
   if(m.enabled == ENABLED)
   {
-        digitalWrite(m.enable_pin,DISABLED);
-        m.enabled = DISABLED;
+    digitalWrite(m.enable_pin,DISABLED);
+    m.enabled = DISABLED;
   }
 }
 
-void FilmScanner::lockMotors(StepperMotor &m1,StepperMotor &m2, StepperMotor &m_gate){
+void FilmScanner::lockMotors(StepperMotor &m1,StepperMotor &m2, StepperMotor &m_gate)
+{
   if(m1.enabled == DISABLED && m2.enabled == DISABLED && m_gate.enabled == DISABLED)
   {
  //   noInterrupts();
@@ -818,7 +717,8 @@ void FilmScanner::lockMotors(StepperMotor &m1,StepperMotor &m2, StepperMotor &m_
     m_gate.enabled = ENABLED;
   }
 }
-void FilmScanner::unlockMotors(StepperMotor &m1, StepperMotor &m2, StepperMotor &m_gate){
+void FilmScanner::unlockMotors(StepperMotor &m1, StepperMotor &m2, StepperMotor &m_gate)
+{
   if(m1.enabled == ENABLED && m2.enabled == ENABLED && m_gate.enabled == DISABLED)
   {
    // noInterrupts();
@@ -832,7 +732,8 @@ void FilmScanner::unlockMotors(StepperMotor &m1, StepperMotor &m2, StepperMotor 
   }
 }
 
-void FilmScanner::setMotorDirectionForward(StepperMotor &m1, StepperMotor &m2, StepperMotor &m_gate){
+void FilmScanner::setMotorDirectionForward(StepperMotor &m1, StepperMotor &m2, StepperMotor &m_gate)
+{
   if(running_direction_set==false)
   {
     digitalWrite(m1.direction_pin,HIGH);
@@ -841,14 +742,16 @@ void FilmScanner::setMotorDirectionForward(StepperMotor &m1, StepperMotor &m2, S
     delay(1);
     running_direction_set=true;
     running_direction = true; // FORWARDS
-    if(debugMode==true){
+    if(debugMode==true)
+    {
       Serial.println("Running direction set to "+String(running_direction)); 
     }   
   }
   else
   {
-    // already set correctly
-    if(debugMode==true){
+    // already set correctly, do nothing
+    if(debugMode==true)
+    {
       Serial.println("Running direction already set to "+String(running_direction)); 
     } 
   }  
@@ -863,49 +766,23 @@ void FilmScanner::setMotorDirectionBackward(StepperMotor &m1, StepperMotor &m2, 
     delay(1);
     running_direction_set=true;
     running_direction = false; //BACKWARDS
-    if(debugMode==true){
+    if(debugMode==true)
+    {
       Serial.println("Running direction set to "+String(running_direction)); 
     } 
   }
   else
   {
-    // already set correctly
-    if(debugMode==true){
+    // already set correctly, do nothing
+    if(debugMode==true)
+    {
      // Serial.println("Running direction already set to "+String(running_direction)); 
     } 
   }
 }
 
-//bool FilmScanner::getRunningDirection(){
-//        return running_direction;
-//}
-
 bool FilmScanner::isRunningForwards(){
-        return running_direction;
-}
-
-bool FilmScanner::isRewindingForwards()
-{
-  if(running_direction == true && is_rewinding==true)
-  {
-    return true;
-  }
-  else 
-  {
-    return false;
-  }
-}
-
-bool FilmScanner::isRewindingBackwards()
-{
-  if(running_direction == false && is_rewinding==true)
-  {
-    return true;
-  }
-  else 
-  {
-    return false;
-  }
+  return running_direction;
 }
 
 float FilmScanner::getArrayAverage (int a[])
@@ -916,4 +793,14 @@ float FilmScanner::getArrayAverage (int a[])
   }
   float average = (float)result/(sizeof(a));
   return average;
+}
+
+void FilmScanner::captureFrame()
+{
+  delay(2);
+   // Focus and Shutter pins shorts to GND, use transistor
+  digitalWrite(capture_output.pin,HIGH);
+  // Wait for camera to respond
+  delay(100);
+  digitalWrite(capture_output.pin, LOW); 
 }

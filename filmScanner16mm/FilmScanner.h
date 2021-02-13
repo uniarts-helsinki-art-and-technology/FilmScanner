@@ -2,7 +2,6 @@
 #define FilmScanner_h
 
 #include "Arduino.h"
-#include <PrintEx.h>
 
 #define FORWARDS true
 #define BACKWARDS false
@@ -14,13 +13,15 @@ typedef struct {
   byte direction_pin;
   byte enable_pin;
   boolean enabled = DISABLED;
- // boolean direction_forward = true;
 } StepperMotor;
 
 typedef struct {
   byte pin;
-  boolean pressed = false;
 } button;
+
+typedef struct {
+  byte pin;
+} output;
 
 typedef struct {
   byte pin;
@@ -45,52 +46,50 @@ class FilmScanner
   public:
         FilmScanner(byte _mode);
 
+        // DEBUG
         void enableDebugMode();
         void disableDebugMode();
-        
+
+        // SETUP
         void setupMotor(StepperMotor &m, byte pulse_pin, byte direction_pin, byte enable_pin);
-
         void setControlPanelButtonPins(byte multi_jog_b,byte stop_b,byte playb_b,byte play_b,byte rec_b,byte rw_b,byte ffw_b, byte reel_b);
+        void setEncoderPins(byte _a,byte _b,byte _sw);
+        void setCameraRemoteControlPin(byte );
 
-        void setupEncoder(byte _a,byte _b,byte _sw);
+        // ENCODER
         void readEncoder();
         int getEncoderCounter();
-        
+
+        // MODES
         void setMode(byte m);
         byte getMode();
-        
+
+        // SENSORS
         void setGateSensorToPin(byte pin);
-        
+
+        // MOTORS
         void moveOneFrame(StepperMotor &m1, StepperMotor &m2);
         void moveOneFrame(StepperMotor &m1, StepperMotor &m2, StepperMotor &m3);
         void rewinding(StepperMotor &m);
         void rewinding(StepperMotor &m1, StepperMotor &m2);
-         //void rewinding(boolean dir, StepperMotor &m1, StepperMotor &m2);
-
-        // set dir pin to set direction
         void setMotorDirectionForward(StepperMotor &m1, StepperMotor &m2, StepperMotor &m_gate);
         void setMotorDirectionBackward(StepperMotor &m1, StepperMotor &m2, StepperMotor &m_gate);
-
-        // set enable pins to lock/unlock motors
+        void lockMotor(StepperMotor &m);
+        void unlockMotor(StepperMotor &m);        
         void lockMotors(StepperMotor &m1,StepperMotor &m2, StepperMotor &m_gate);
         void unlockMotors(StepperMotor &m1, StepperMotor &m2, StepperMotor &m_gate);
-
-        // read buttons in control panel and set functionality
+        
+        // CONTROL PANEL
         void readControlPanel(); // MAIN FUNCTIONALITY DEFINE HERE
         void debugControlPanel();
 
+        // CAMERA CONTROL
+        void captureFrame();
+
         // Do we need this? int getPulseDelay();
         // Do we need this? void setDelay(int d);
-
-        bool isPlayingForwards();
-        bool isPlayingBackwards();
-        // Do we need this? bool isRewinding();
-        bool isRewindingForwards();
-        bool isRewindingBackwards();
-        bool isRecording();
         
-        void lockMotor(StepperMotor &m);
-        void unlockMotor(StepperMotor &m);
+        bool isRecording();
         
   private:
           void setupButton(button &b, byte pin);
@@ -116,14 +115,14 @@ class FilmScanner
           void startRecording();
           void stopRecording();
 
-          //bool getRunningDirection();
           bool isRunningForwards();
   
           button play_button, play_backwards_button, stop_button, rec_button, ffw_button, rw_button, reel_master_switch, multi_jog;
           //motor m1,m2,m_gate; >> currently outside of class
           sensor gate_sensor;
           encoder enc;
-
+          output capture_output;
+          
           void move_one_step(StepperMotor m1, StepperMotor m2, StepperMotor m3, int d);
 
           float getArrayAverage(int a[]);
@@ -152,10 +151,5 @@ class FilmScanner
           int stepsBetweenFrames[5] = {400,400,410,400,413};
           byte stepCount = 0;
 
-          //Using formatted stirngs without a buffer.
-          //PrintEx debug = Serial; //Wrap the Serial object in a PrintEx interface.
-
 };
-
-
 #endif

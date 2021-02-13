@@ -6,7 +6,7 @@
     |                                                    |
     |      description: code for 16mm telecine machine . | 
     |                                                    |
-    |                  date: 18.12.2020                   |
+    |                  date: 13.02.2021                   |
     |                                                    |
     ^----------------------------------------------------^
 
@@ -27,11 +27,13 @@ LiquidCrystal_I2C lcd(0x27,20,21);  // NOTE! Before use, run ic2_scanner sketch 
 // other global variables
 unsigned long saved_frames_count=0;
 
-int my_delay= 100;
+int pause_between_frames= 100;
+int prev_mode = 0;
 bool drawLCD = true;
 bool drawLCD_stopped = true;
+bool mode_changed = false;
 
-FilmScanner FilmScanner(0); // modes 0=stopped, 1=rewind, 2=play
+FilmScanner FilmScanner(0); // set default mode: 0=stop
 StepperMotor m1, m2, m_gate;
 
 void setup() {
@@ -39,12 +41,15 @@ void setup() {
   Serial.begin(9600);
 
  // FilmScanner.enableDebugMode(); // comment out if not needed
-
+  
+  FilmScanner.setEncoderPins(18,19,20);
+  FilmScanner.setCameraRemoteControlPin(34);
   FilmScanner.setControlPanelButtonPins(36,38,40,42,44,46,48,50); // Input pins in following order: multi_jog,stop,playback,play,rec,rw,ffw,reel-to-reel
-  FilmScanner.setupEncoder(18,19,20);
+  FilmScanner.setGateSensorToPin(52);
+
 //  attachInterrupt(digitalPinToInterrupt(18), updateEncoder, CHANGE); // TODO: add interrupt
 //  attachInterrupt(digitalPinToInterrupt(19), updateEncoder, CHANGE); // TODO: add interrupt
-  FilmScanner.setGateSensorToPin(52);
+
 
   FilmScanner.setupMotor(m1,2,3,4);
   FilmScanner.setupMotor(m2,5,6,7);
@@ -52,6 +57,7 @@ void setup() {
 
   // Initialize the LCD
   lcd.init();
+  // Print messsage mode=0
   printLCD(0);
 
 }
@@ -61,113 +67,114 @@ void loop()
 {  
   switch (FilmScanner.getMode()) // tarkistetaan miten filmiä siirretään
   {
-    case 1: // WINDING
+    case 1: // REEL-TO-REEL: STOP
+      if(mode_changed)
+      {
+      FilmScanner.unlockMotor(m1);
+      FilmScanner.unlockMotor(m2);
       FilmScanner.unlockMotor(m_gate);
-
-      // FFW
-      if(FilmScanner.isRewindingForwards() == true){
-        FilmScanner.setMotorDirectionForward(m1,m2,m_gate);
-        FilmScanner.unlockMotor(m1);
-        FilmScanner.lockMotor(m2);
-       // no need to run 2 motors: FilmScanner.rewinding(m1,m2);   
-        FilmScanner.rewinding(m2);   
       }
-      // RW
-      else if (FilmScanner.isRewindingBackwards() == true)
-      {
-        FilmScanner.setMotorDirectionBackward(m1,m2,m_gate);
-        FilmScanner.unlockMotor(m2);
-        FilmScanner.lockMotor(m1);
-       // no need to run 2 motors: FilmScanner.rewinding(m1,m2); 
-        FilmScanner.rewinding(m1);      
-      }
-      // STOP
-      else
-      {
-        FilmScanner.unlockMotor(m1);
-        FilmScanner.unlockMotor(m2);
-        // scanner is stopped, waiting user to push ffw / rw button
-      }
-      printLCD(1);
-
+      // scanner is stopped, waiting user to push ffw / rw button
       break;
-    case 2: // PLAY AND RECORD
-
-      // PLAY FORWARDS
-      if(FilmScanner.isPlayingForwards() == true)
+      
+    case 2: // REEL-TO-REEL: FFW
+      if(mode_changed)
       {
         FilmScanner.setMotorDirectionForward(m1,m2,m_gate);
         FilmScanner.unlockMotor(m1);
+        FilmScanner.unlockMotor(m_gate);
         FilmScanner.lockMotor(m2);
-        FilmScanner.lockMotor(m_gate);
-        FilmScanner.moveOneFrame(m2,m_gate);
-
-        // RECORDING
-        if(FilmScanner.isRecording() == true)
-        {
-          // Take photo!
-          // TODO: send signal via lanc: SEND HIGH TO TWO PINS: RELEASE + FOCUS
-          // TODO: wait until frame is saved. 
-          saved_frames_count=saved_frames_count + 1;
-          printLCD(2);
-        }
-        else
-        {
-         printLCD(3);
-          
-        }
-        // pause always after single frame is moved
-        delay(my_delay);
       }
-      // PLAY BACKWARDS
-      else if(FilmScanner.isPlayingBackwards() == true)
+      FilmScanner.rewinding(m2);  
+      break;    
+
+    case 3: // REEL-TO-REEL: RW      
+      if(mode_changed)
+      {
+        FilmScanner.setMotorDirectionBackward(m1,m2,m_gate);
+        FilmScanner.unlockMotor(m2);
+        FilmScanner.unlockMotor(m_gate);
+        FilmScanner.lockMotor(m1);
+      }
+      FilmScanner.rewinding(m1);      
+      break;      
+
+    case 4: // PLAY AND RECORD
+      if(mode_changed)
+      {
+      FilmScanner.setMotorDirectionForward(m1,m2,m_gate);
+      FilmScanner.unlockMotor(m1);
+      FilmScanner.lockMotor(m2);
+      FilmScanner.lockMotor(m_gate);
+      }
+      FilmScanner.moveOneFrame(m2,m_gate);
+
+      // RECORDING
+      if(FilmScanner.isRecording() == true)
+      {
+        FilmScanner.captureFrame();
+        saved_frames_count=saved_frames_count + 1;
+      }
+      delay(pause_between_frames);
+      break;
+      
+    case 5: // PLAY BACKWARDS
+      if(mode_changed)
       {
         FilmScanner.setMotorDirectionBackward(m1,m2,m_gate);
         FilmScanner.unlockMotor(m2);
         FilmScanner.lockMotor(m1);
         FilmScanner.lockMotor(m_gate);
-        FilmScanner.moveOneFrame(m1,m_gate);
-        printLCD(4);
-        // pause always after single frame is moved
-        delay(my_delay);
       }
-      // STOPPED
-      else
+      FilmScanner.moveOneFrame(m1,m_gate);
+      delay(pause_between_frames);
+      break;
+      
+    case 6:// STOPPED
+      if(mode_changed)
       {
-        // wait user to push: play / play_b / rec button
         FilmScanner.unlockMotor(m1);
         FilmScanner.lockMotor(m2);
         FilmScanner.unlockMotor(m_gate);
-
-        printLCD(5);
       }
+      // wait user to push: play / play_b / rec button
       break;
-    case 3:
-        // ERROR IN SCANNING:
-        // TODO: solve error with multi jog?
-        printLCD(6);
-
+      
+    case 7: // ERROR:
+      // TODO: solve errors with multi jog?
       break;
-    default: // STOP
-      // stopped, no need to move anywhere
-      // Print a message to the LCD ?
+      
+    default:
       break;
   }
 
-  // read inputs from control panel
+  // Print information about the selected mode
+  printLCD(FilmScanner.getMode());
+
+  // Read control panel buttons
   FilmScanner.readControlPanel();
   //FilmScanner.debugControlPanel(); // print inputs from control panel (only for debugging)
 
+  if(FilmScanner.getMode() != prev_mode)
+  {
+    mode_changed = true;
+    prev_mode = FilmScanner.getMode();
+  }
+  else
+  {
+    mode_changed = false;
+  }
+
   FilmScanner.readEncoder(); // >> TODO: move to interrupt function
-  my_delay = constrain((100+(FilmScanner.getEncoderCounter()*100.0)), 100,5000);
+  pause_between_frames = constrain((100+(FilmScanner.getEncoderCounter()*100.0)), 100,5000);
   
 }
 
-
+// TODO: use this function with interrupt
 //void updateEncoder()
 //{
 //    FilmScanner.readEncoder();
-//    my_delay = constrain((100+(FilmScanner.getEncoderCounter()*10.0)), 100,5000);
+//    pause_between_frames = constrain((100+(FilmScanner.getEncoderCounter()*10.0)), 100,5000);
 //}
 
 
@@ -184,55 +191,83 @@ void printLCD (int mode)
       lcd.print("Starting...");
       delay(1000);
       break;
+      
     case 1:
       if(drawLCD == true)
       {
         // Print a message to the LCD.
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("Reel-To-Reel");
+        lcd.print("Reel-To-Reel:");
         drawLCD=false;
       }   
       drawLCD_stopped=true;
       break;
+      
     case 2:
       if(drawLCD == true)
       {
-        // Print a message to the LCD (only once)
+        // Print a message to the LCD.
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("Recording");
-        lcd.setCursor(0,1);
-        lcd.print("FC:");
+        lcd.print("Reel-To-Reel:FFW");
+        drawLCD=false;
+      }   
+      drawLCD_stopped=true;
+      break;
+      
+    case 3:
+      if(drawLCD == true)
+      {
+        // Print a message to the LCD.
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Reel-To-Reel:RW");
+        drawLCD=false;
+      }   
+      drawLCD_stopped=true;
+      break;
+      
+    case 4:
+      // Print a message to the LCD (only once)
+      if(drawLCD == true)
+      {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        if(FilmScanner.isRecording())
+        {
+          lcd.print("Recording");
+          lcd.setCursor(0,1);
+          lcd.print("FC:");
+        }
+        else
+        {
+          lcd.print("Playing");  
+        }
         drawLCD=false;
         drawLCD_stopped=true;
-      } 
+      }
       // Print a message to the LCD (continuously)
-      lcd.setCursor(4,1);
-      lcd.print(String(saved_frames_count));
-    break;
-    case 3:
+      if(FilmScanner.isRecording())
+      {
+        lcd.setCursor(4,1);
+        lcd.print(String(saved_frames_count)); 
+      }
+      break;
+    
+    case 5:
      if(drawLCD == true)
       {
         // Print a message to the LCD (only once)
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("Playing");
+        lcd.print("Backwards");
         drawLCD=false;
         drawLCD_stopped=true;
       }
     break;
-    case 4:
-      if(drawLCD == true)
-      {
-        // Print a message to the LCD (only once)
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Play Backwards");
-        drawLCD = false;
-      }
-    break;
-    case 5:
+    
+    case 6:
       if(drawLCD_stopped==true)
       {
         // Print a message to the LCD (only once)
@@ -248,9 +283,10 @@ void printLCD (int mode)
       lcd.setCursor(6,1);
       lcd.print("....");
       lcd.setCursor(6,1);
-      lcd.print(String(my_delay));
+      lcd.print(String(pause_between_frames));
     break;
-    case 6:
+    
+    case 7:
       if(drawLCD == true)
       {
         // Print a message to the LCD.
@@ -258,6 +294,7 @@ void printLCD (int mode)
         lcd.setCursor(0, 0);
         lcd.print("ERROR");
         drawLCD = false;
+        drawLCD_stopped=true;
       }
     break;
   }

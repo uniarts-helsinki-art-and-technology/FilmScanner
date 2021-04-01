@@ -44,7 +44,7 @@ void setup() {
   
   FilmScanner.setEncoderPins(18,19,52); // a, b, switch
   FilmScanner.setCameraRemoteControlPin(12);
-  FilmScanner.setControlPanelButtonPins(38,40,42,44,46,48,50); // Input pins in following order: multi_jog,stop,playback,play,rec,rw,ffw,reel-to-reel
+  FilmScanner.setControlPanelButtonPins(38,40,42,44,46,48,50); // Input pins in following order: stop,playback,play,rec,rw,ffw,reel-to-reel
   FilmScanner.setGateSensorToPin(30);
   FilmScanner.setSwingArmSensorsToPin(32,34); // upper, lower
   // LED OUTPUT Pin 36

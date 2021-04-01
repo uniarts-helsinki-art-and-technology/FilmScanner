@@ -6,7 +6,7 @@
     |                                                    |
     |      description: code for 16mm telecine machine . | 
     |                                                    |
-    |                  date: 1.04.2021                   |
+    |                  date: 01.04.2021                   |
     |                                                    |
     ^----------------------------------------------------^
 
@@ -48,14 +48,15 @@ void setup() {
   FilmScanner.setGateSensorToPin(30);
   FilmScanner.setSwingArmSensorsToPin(32,34); // upper, lower
   // LED OUTPUT Pin 36
+
+
   
 //  attachInterrupt(digitalPinToInterrupt(18), updateEncoder, CHANGE); // TODO: add interrupt
 //  attachInterrupt(digitalPinToInterrupt(19), updateEncoder, CHANGE); // TODO: add interrupt
 
-
-  FilmScanner.setupMotor(m1,2,3,4);
-  FilmScanner.setupMotor(m2,5,6,7);
-  FilmScanner.setupMotor(m_gate,8,9,10);
+  FilmScanner.setupMotor(m1,2,3,4); //motor,pulse,direction, enable
+  FilmScanner.setupMotor(m2,5,6,7); //motor,pulse,direction, enable
+  FilmScanner.setupMotor(m_gate,8,9,10); //motor,pulse,direction, enable
 
   // Initialize the LCD
   lcd.init();

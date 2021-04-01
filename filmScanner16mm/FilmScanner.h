@@ -52,7 +52,7 @@ class FilmScanner
 
         // SETUP
         void setupMotor(StepperMotor &m, byte pulse_pin, byte direction_pin, byte enable_pin);
-        void setControlPanelButtonPins(byte multi_jog_b,byte stop_b,byte playb_b,byte play_b,byte rec_b,byte rw_b,byte ffw_b, byte reel_b);
+        void setControlPanelButtonPins(byte stop_b,byte playb_b,byte play_b,byte rec_b,byte rw_b,byte ffw_b, byte reel_b);
         void setEncoderPins(byte _a,byte _b,byte _sw);
         void setCameraRemoteControlPin(byte );
 

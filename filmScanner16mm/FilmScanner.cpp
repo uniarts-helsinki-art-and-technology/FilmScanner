@@ -110,9 +110,9 @@ int FilmScanner::getEncoderCounter()
   return enc.counter;
 }
 
-void FilmScanner::setControlPanelButtonPins(byte multi_jog_b,byte stop_b,byte playb_b,byte play_b,byte rec_b,byte rw_b,byte ffw_b, byte reel_b)
+void FilmScanner::setControlPanelButtonPins(byte stop_b,byte playb_b,byte play_b,byte rec_b,byte rw_b,byte ffw_b, byte reel_b)
 {
-  setupButton(multi_jog, multi_jog_b);
+  // remove this: setupButton(multi_jog, multi_jog_b);
   setupButton(stop_button, stop_b);
   setupButton(play_backwards_button, playb_b);
   setupButton(play_button, play_b);
@@ -552,7 +552,7 @@ void FilmScanner::readControlPanel()
       if (is_playing == false) // better:  mode == 6
       {
                 
-     //   multi_jog.pressed = false; // default to make button click possible
+     //   remove this: multi_jog.pressed = false; // default to make button click possible
         
         if(digitalRead(rec_button.pin) == HIGH)
         {
@@ -646,7 +646,7 @@ void FilmScanner::debugControlPanel()
       // STOP PLAY (AND REC)
       Serial.println("FilmScanner STOP button connect to pin: "+String(stop_button.pin)+" is pressed");
     }
-      // multi_jog.pressed = false; // TODO: Add multi-jog functionality, default to make button click possible
+      // remove this: multi_jog.pressed = false; // TODO: Add multi-jog functionality, default to make button click possible
   }
   delay(1); // delay in between reads for stability
 }

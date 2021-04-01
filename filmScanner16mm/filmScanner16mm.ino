@@ -42,10 +42,10 @@ void setup() {
 
  // FilmScanner.enableDebugMode(); // comment out if not needed
   
-  FilmScanner.setEncoderPins(18,19,20);
-  FilmScanner.setCameraRemoteControlPin(34);
-  FilmScanner.setControlPanelButtonPins(36,38,40,42,44,46,48,50); // Input pins in following order: multi_jog,stop,playback,play,rec,rw,ffw,reel-to-reel
-  FilmScanner.setGateSensorToPin(52);
+  FilmScanner.setEncoderPins(18,19,52); // a, b, switch
+  FilmScanner.setCameraRemoteControlPin(12);
+  FilmScanner.setControlPanelButtonPins(38,40,42,44,46,48,50); // Input pins in following order: multi_jog,stop,playback,play,rec,rw,ffw,reel-to-reel
+  FilmScanner.setGateSensorToPin(36);
 
 //  attachInterrupt(digitalPinToInterrupt(18), updateEncoder, CHANGE); // TODO: add interrupt
 //  attachInterrupt(digitalPinToInterrupt(19), updateEncoder, CHANGE); // TODO: add interrupt

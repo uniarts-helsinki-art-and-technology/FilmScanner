@@ -55,6 +55,7 @@ class FilmScanner
         void setControlPanelButtonPins(byte stop_b,byte playb_b,byte play_b,byte rec_b,byte rw_b,byte ffw_b, byte reel_b);
         void setEncoderPins(byte _a,byte _b,byte _sw);
         void setCameraRemoteControlPin(byte );
+        void setSwingArmSensorsToPin(byte upper_arm_pin, byte lower_arm_pin);
 
         // ENCODER
         void readEncoder();
@@ -119,7 +120,7 @@ class FilmScanner
   
           button play_button, play_backwards_button, stop_button, rec_button, ffw_button, rw_button, reel_master_switch, multi_jog;
           //motor m1,m2,m_gate; >> currently outside of class
-          sensor gate_sensor;
+          sensor gate_sensor, upper_swing_arm, lower_swing_arm;
           encoder enc;
           output capture_output;
           

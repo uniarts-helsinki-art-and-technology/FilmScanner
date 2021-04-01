@@ -48,6 +48,14 @@ void FilmScanner::setCameraRemoteControlPin(byte capture)
   pinMode(capture_output.pin,OUTPUT);
 }
 
+void FilmScanner::setSwingArmSensorsToPin(byte upper_arm_pin, byte lower_arm_pin)
+{
+  upper_swing_arm.pin = upper_arm_pin;
+  lower_swing_arm.pin = lower_arm_pin;
+  pinMode(capture_output.pin,OUTPUT);
+}
+
+
 
 void FilmScanner::readEncoder()
 {

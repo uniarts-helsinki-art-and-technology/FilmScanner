@@ -46,6 +46,7 @@ void setup() {
   FilmScanner.setCameraRemoteControlPin(12);
   FilmScanner.setControlPanelButtonPins(38,40,42,44,46,48,50); // Input pins in following order: multi_jog,stop,playback,play,rec,rw,ffw,reel-to-reel
   FilmScanner.setGateSensorToPin(36);
+  FilmScanner.setSwingArmSensorsToPin(32,34); // upper, lower
 
 //  attachInterrupt(digitalPinToInterrupt(18), updateEncoder, CHANGE); // TODO: add interrupt
 //  attachInterrupt(digitalPinToInterrupt(19), updateEncoder, CHANGE); // TODO: add interrupt

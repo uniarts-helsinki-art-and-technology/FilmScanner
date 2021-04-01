@@ -6,7 +6,7 @@
     |                                                    |
     |      description: code for 16mm telecine machine . | 
     |                                                    |
-    |                  date: 13.02.2021                   |
+    |                  date: 1.04.2021                   |
     |                                                    |
     ^----------------------------------------------------^
 
@@ -45,9 +45,10 @@ void setup() {
   FilmScanner.setEncoderPins(18,19,52); // a, b, switch
   FilmScanner.setCameraRemoteControlPin(12);
   FilmScanner.setControlPanelButtonPins(38,40,42,44,46,48,50); // Input pins in following order: multi_jog,stop,playback,play,rec,rw,ffw,reel-to-reel
-  FilmScanner.setGateSensorToPin(36);
+  FilmScanner.setGateSensorToPin(30);
   FilmScanner.setSwingArmSensorsToPin(32,34); // upper, lower
-
+  // LED OUTPUT Pin 36
+  
 //  attachInterrupt(digitalPinToInterrupt(18), updateEncoder, CHANGE); // TODO: add interrupt
 //  attachInterrupt(digitalPinToInterrupt(19), updateEncoder, CHANGE); // TODO: add interrupt
 

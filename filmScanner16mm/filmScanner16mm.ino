@@ -207,7 +207,7 @@ void printLCD (int mode)
       // Print a message to the LCD.
       lcd.backlight();
       lcd.setCursor(0, 0);
-      lcd.print("Film scanner 0.1");
+      lcd.print("Film scanner 1.0");
       lcd.setCursor(0, 1);
       lcd.print("Starting...");
       delay(1000);
@@ -264,20 +264,26 @@ void printLCD (int mode)
         else
         {
           lcd.print("Playing");
+
         }
         drawLCD = false;
         drawLCD_stopped = true;
       }
-      // Print a message to the LCD (continuously)
-      lcd.setCursor(0, 1);
-      lcd.print("Speed:");
-      lcd.setCursor(6, 1);
-      lcd.print(String(300 + FilmScanner.getPulseDelay()));
+
+
       // Print a message to the LCD (continuously)
       if (FilmScanner.isRecording())
       {
         lcd.setCursor(4, 1);
         lcd.print(String(saved_frames_count));
+      }
+      else
+      {
+        // Print a message to the LCD (continuously)
+        lcd.setCursor(0, 1);
+        lcd.print("Speed:");
+        lcd.setCursor(6, 1);
+        lcd.print(String(300 + FilmScanner.getPulseDelay()));
       }
       break;
 

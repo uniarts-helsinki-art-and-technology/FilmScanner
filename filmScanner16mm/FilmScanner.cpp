@@ -240,7 +240,8 @@ void FilmScanner::moveOneStep(StepperMotor &m1, StepperMotor &m2)
 {
   digitalWrite(m1.pulse_pin,HIGH);
   digitalWrite(m2.pulse_pin,HIGH);
-  delayMicroseconds(min_delay+abs(custom_delay)+abs(ramp_delay));
+  // TODO ADD RAMP delayMicroseconds(min_delay+abs(custom_delay)+abs(ramp_delay));
+  delayMicroseconds(min_delay+abs(custom_delay));
   digitalWrite(m1.pulse_pin,LOW);
   digitalWrite(m2.pulse_pin,LOW);
   delayMicroseconds(pulse_delay);

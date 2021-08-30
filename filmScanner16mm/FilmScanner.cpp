@@ -38,8 +38,12 @@ void FilmScanner::setEncoderPins(byte _a,byte _b,byte _sw)
   pinMode(enc.pin_A,INPUT_PULLUP);
   pinMode(enc.pin_B,INPUT_PULLUP);
   pinMode(enc.pin_Switch, INPUT_PULLUP);
+  //attachInterrupt(digitalPinToInterrupt(enc.pin_A), encoderStateChange, CHANGE); // funktion kutsuminen täältä ei toimi, miksi?
+  //attachInterrupt(digitalPinToInterrupt(enc.pin_B), encoderStateChange, CHANGE); // funktion kutsuminen täältä ei toimi, miksi?
   // Read the initial state of CLK
   enc.lastStateA = digitalRead(enc.pin_A);
+  // Put in a slight delay to help debounce the reading
+  delay(1);
 }
 
 void FilmScanner::setCameraRemoteControlPin(byte capture)
@@ -55,8 +59,6 @@ void FilmScanner::setSwingArmSensorsToPin(byte upper_arm_pin, byte lower_arm_pin
   pinMode(capture_output.pin,OUTPUT);
 }
 
-
-
 void FilmScanner::readEncoder()
 {
   // Read the current state of pin A (CLK)
@@ -66,7 +68,6 @@ void FilmScanner::readEncoder()
   // React to only 1 state change to avoid double count
   if (enc.currentStateA != enc.lastStateA  && enc.currentStateA == 1)
   {
-
     // If the pin B (DT) state is different than the CLK state then
     // the encoder is rotating CCW
     if (digitalRead(enc.pin_B) != enc.currentStateA)
@@ -111,6 +112,9 @@ void FilmScanner::readEncoder()
 
   // Put in a slight delay to help debounce the reading
   delay(1);
+
+  // Reset encoder state (for interrupt function)
+  enc.state  = false;
 }
 
 int FilmScanner::getEncoderCounter()

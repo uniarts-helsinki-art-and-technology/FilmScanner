@@ -38,6 +38,7 @@ typedef struct {
   boolean pressed = false;
   String currentDir ="";
   unsigned long lastButtonPress = 0;
+  volatile bool state = false;
 } encoder;
 
 
@@ -60,7 +61,7 @@ class FilmScanner
         // ENCODER
         void readEncoder();
         int getEncoderCounter();
-
+        
         // MODES
         void setMode(byte m);
         byte getMode();
@@ -91,6 +92,7 @@ class FilmScanner
         // Do we need this? void setDelay(int d);
         
         bool isRecording();
+        encoder enc; // is public because of interrupt calls
         
   private:
           void setupButton(button &b, byte pin);
@@ -121,7 +123,6 @@ class FilmScanner
           button play_button, play_backwards_button, stop_button, rec_button, ffw_button, rw_button, reel_master_switch, multi_jog;
           //motor m1,m2,m_gate; >> currently outside of class
           sensor gate_sensor, upper_swing_arm, lower_swing_arm;
-          encoder enc;
           output capture_output;
           
           void move_one_step(StepperMotor m1, StepperMotor m2, StepperMotor m3, int d);

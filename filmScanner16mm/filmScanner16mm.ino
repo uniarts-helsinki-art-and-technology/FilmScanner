@@ -283,7 +283,7 @@ void printLCD (int mode)
         lcd.setCursor(0, 1);
         lcd.print("Speed:");
         lcd.setCursor(6, 1);
-        lcd.print(String(300 + FilmScanner.getPulseDelay()));
+        lcd.print(String(FilmScanner.getPulseDelay()));
       }
       break;
 

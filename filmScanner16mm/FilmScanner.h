@@ -148,7 +148,7 @@ class FilmScanner
           
          // byte PIN_FRAME_DETECTION_SWITCH = 0;
           int pulse_delay = 100;
-          const int min_delay = 450; // AccelStepper kirjastossa 1 Microsec
+          const int min_delay = 500; // AccelStepper kirjastossa 1 Microsec
           const int max_delay = 1000;
           int delay_ramp = min_delay;
           int ramp_delay = 0;

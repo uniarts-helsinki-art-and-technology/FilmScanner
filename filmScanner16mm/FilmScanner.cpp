@@ -225,7 +225,7 @@ void FilmScanner::setPulseDelay(int _p)
 
 int FilmScanner::getPulseDelay()
 {
-  return custom_delay;
+  return min_delay+abs(custom_delay);
 }
 
 void FilmScanner::moveOneStep(StepperMotor &m)

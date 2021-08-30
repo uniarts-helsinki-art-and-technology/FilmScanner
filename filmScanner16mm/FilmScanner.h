@@ -85,6 +85,10 @@ class FilmScanner
         void readControlPanel(); // MAIN FUNCTIONALITY DEFINE HERE
         void debugControlPanel();
 
+        // SPEED & DELAY
+        void setPulseDelay(int _p);
+        int getPulseDelay();
+
         // CAMERA CONTROL
         void captureFrame();
 
@@ -93,6 +97,7 @@ class FilmScanner
         
         bool isRecording();
         encoder enc; // is public because of interrupt calls
+        int custom_delay = 0;
         
   private:
           void setupButton(button &b, byte pin);
@@ -143,9 +148,10 @@ class FilmScanner
           
          // byte PIN_FRAME_DETECTION_SWITCH = 0;
           int pulse_delay = 100;
-          const int min_delay = 50; // AccelStepper kirjastossa 1 Microsec
+          const int min_delay = 300; // AccelStepper kirjastossa 1 Microsec
           const int max_delay = 1000;
           int delay_ramp = min_delay;
+          int ramp_delay = 0;
           boolean hidastuva =false;
           boolean nopeutuva =false;
 

@@ -218,6 +218,16 @@ byte FilmScanner::getMode()
 //       return pulse_delay;
 //}
 
+void FilmScanner::setPulseDelay(int _p)
+{
+  custom_delay = _p;
+}
+
+int FilmScanner::getPulseDelay()
+{
+  return custom_delay;
+}
+
 void FilmScanner::moveOneStep(StepperMotor &m)
 {
   digitalWrite(m.pulse_pin,HIGH);
@@ -230,7 +240,7 @@ void FilmScanner::moveOneStep(StepperMotor &m1, StepperMotor &m2)
 {
   digitalWrite(m1.pulse_pin,HIGH);
   digitalWrite(m2.pulse_pin,HIGH);
-  delayMicroseconds(min_delay);
+  delayMicroseconds(min_delay+abs(custom_delay)+abs(ramp_delay));
   digitalWrite(m1.pulse_pin,LOW);
   digitalWrite(m2.pulse_pin,LOW);
   delayMicroseconds(pulse_delay);
@@ -247,7 +257,6 @@ void FilmScanner::moveOneStep(StepperMotor &m1, StepperMotor &m2, StepperMotor &
   digitalWrite(m3.pulse_pin,LOW);
   delayMicroseconds(pulse_delay);
 }
-
 
 void FilmScanner::rewindOneStep(StepperMotor &m, int d)
 {
@@ -271,9 +280,17 @@ void FilmScanner::moveOneFrame(StepperMotor &m1, StepperMotor &m2)
 {
   gate_sensor.pressed = false; //default
 
+  int ramp = 0;
+  ramp_delay = 1000;
   //Forward 1000 steps? TODO: CHOOSE ANOTHER HARD CODED VALUE?
   for (int i=0; i<1000; i++)
   {
+    if(i%50==0)
+    {
+    ramp++;
+    ramp_delay = ramp_delay - (ramp*50);
+    
+    }
     moveOneStep(m1,m2);
 
     // Detect dropped frames
@@ -297,7 +314,8 @@ void FilmScanner::moveOneFrame(StepperMotor &m1, StepperMotor &m2)
       // if switch is pressed break out from for loop
       if(digitalRead(gate_sensor.pin) == HIGH)
       {
-          if(debugMode==true){
+          if(debugMode==true)
+          {
             Serial.println("Frame detected after "+String(i)+" steps!");
           }
           gate_sensor.pressed = true;
@@ -809,7 +827,7 @@ float FilmScanner::getArrayAverage (int a[])
 
 void FilmScanner::captureFrame()
 {
-  delay(2);
+  delay(10);
    // Focus and Shutter pins shorts to GND, use transistor
   digitalWrite(capture_output.pin,HIGH);
   // Wait for camera to respond

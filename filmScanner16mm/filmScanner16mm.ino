@@ -6,7 +6,7 @@
     |                                                    |
     |      description: code for 16mm telecine machine . |
     |                                                    |
-    |                  date: 01.04.2021                   |
+    |                  date: 30.08.2021                   |
     |                                                    |
     ^----------------------------------------------------^
 
@@ -46,8 +46,8 @@ bool drawLCD_stopped = true;
 void setup() {
 
   // Start serial for debugging
-  // Serial.begin(9600);
-  // FilmScanner.enableDebugMode(); // comment out if not needed
+  //   Serial.begin(9600);
+  //   FilmScanner.enableDebugMode(); // comment out if not needed
 
   // Motors
   FilmScanner.setupMotor(m1, 2, 3, 4); // Input pins in following order: motor,pulse,direction, enable
@@ -58,16 +58,16 @@ void setup() {
   FilmScanner.setControlPanelButtonPins(38, 40, 42, 44, 46, 48, 50); // Input pins in following order: stop,playback,play,rec,rw,ffw,reel-to-reel
 
   // Rotary encoder >> USING ENCODER LIB INSTEAD
-  //  FilmScanner.setEncoderPins(18,19,52); // Input pins in following order: a, b, switch
+  //   FilmScanner.setEncoderPins(18,19,52); // Input pins in following order: a, b, switch
   //  attachInterrupt(digitalPinToInterrupt(FilmScanner.enc.pin_A), encoderStateChangeA, CHANGE);
   //  attachInterrupt(digitalPinToInterrupt(FilmScanner.enc.pin_B), encoderStateChangeB, CHANGE);
 
   // Camera control
-  FilmScanner.setCameraRemoteControlPin(12);
+  FilmScanner.setCameraRemoteControlPin(11);
 
   // Switches and sensors
-  FilmScanner.setGateSensorToPin(30);
-  FilmScanner.setSwingArmSensorsToPin(32, 34); // Input pins in following order: upper, lower
+  FilmScanner.setGateSensorToPin(32);
+  //  FilmScanner.setSwingArmSensorsToPin(32, 34); // Input pins in following order: upper, lower
   // LED OUTPUT Pin 36
 
   // Initialize the LCD
@@ -75,11 +75,14 @@ void setup() {
   // Print start messsage (mode=0)
   printLCD(0);
 
+  // SET CUSTOM VALUE AS STARTING PREF. FilmScanner.setPulseDelay();
+
 }
 
 
 void loop()
 {
+
   switch (FilmScanner.getMode()) // tarkistetaan miten filmiä siirretään
   {
     case 1: // REEL-TO-REEL: STOP
@@ -131,18 +134,26 @@ void loop()
         saved_frames_count = saved_frames_count + 1;
       }
       delay(pause_between_frames);
+
+      long encoder_current = rotary_encoder.read();
+      if (encoder_current != encoder_ref) {
+        encoder_ref = encoder_current;
+        //pause_between_frames = constrain(encoder_current * rotary_encoder_speed, 100, 5000);
+        //int encoder_current_constrained = constrain(encoder_current, 100, 5000);
+        FilmScanner.setPulseDelay(int(encoder_current));
+      }
       break;
 
-    case 5: // PLAY BACKWARDS
+    case -1: // PLAY BACKWARDS: 5
       if (mode_changed)
       {
-        FilmScanner.setMotorDirectionBackward(m1, m2, m_gate);
-        FilmScanner.unlockMotor(m2);
-        FilmScanner.lockMotor(m1);
-        FilmScanner.lockMotor(m_gate);
+        //FilmScanner.setMotorDirectionBackward(m1, m2, m_gate);
+        //FilmScanner.unlockMotor(m2);
+        //FilmScanner.lockMotor(m1);
+        //FilmScanner.lockMotor(m_gate);
       }
-      FilmScanner.moveOneFrame(m1, m_gate);
-      delay(pause_between_frames);
+      //FilmScanner.moveOneFrame(m1, m_gate);
+      //delay(pause_between_frames);
       break;
 
     case 6:// STOPPED
@@ -163,6 +174,8 @@ void loop()
       break;
   }
 
+  // Serial.println(digitalRead(30));
+
   // Print information about the selected mode
   printLCD(FilmScanner.getMode());
 
@@ -179,14 +192,10 @@ void loop()
   {
     mode_changed = false;
   }
-  
+
   //FilmScanner.readEncoder(); >> USE ENCODER LIB INSTEAD
-  long encoder_current = rotary_encoder.read();
-  if (encoder_current != encoder_ref) {
-    encoder_ref = encoder_current;
-    pause_between_frames = constrain(encoder_current * rotary_encoder_speed, 100, 5000);
-  }
-  
+
+
 }
 
 
@@ -260,6 +269,11 @@ void printLCD (int mode)
         drawLCD_stopped = true;
       }
       // Print a message to the LCD (continuously)
+      lcd.setCursor(0, 1);
+      lcd.print("Speed:");
+      lcd.setCursor(6, 1);
+      lcd.print(String(300 + FilmScanner.getPulseDelay()));
+      // Print a message to the LCD (continuously)
       if (FilmScanner.isRecording())
       {
         lcd.setCursor(4, 1);
@@ -286,16 +300,16 @@ void printLCD (int mode)
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Stopped");
-        lcd.setCursor(0, 1);
-        lcd.print("Speed:");
+        //lcd.setCursor(0, 1);
+        //lcd.print("Speed:");
         drawLCD = true;
         drawLCD_stopped = false;
       }
       // Print a message to the LCD (continuously)
-      lcd.setCursor(6, 1);
-      lcd.print("....");
-      lcd.setCursor(6, 1);
-      lcd.print(String(pause_between_frames));
+      //lcd.setCursor(6, 1);
+      //lcd.print("....");
+      //lcd.setCursor(6, 1);
+      //lcd.print(String(pause_between_frames));
       break;
 
     case 7:

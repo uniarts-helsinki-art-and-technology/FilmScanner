@@ -19,71 +19,56 @@
 
 
 */
+
 #include "FilmScanner.h"
 #include <Encoder.h>
 #include <LiquidCrystal_I2C.h> // external library
 
-LiquidCrystal_I2C lcd(0x27, 20, 21); // NOTE! Before use, run ic2_scanner sketch and get the IC2 address, 0x27 for example
-Encoder rotary_encoder(18, 19);
-
-FilmScanner FilmScanner(0); // set default mode: 0=stop
-StepperMotor m1, m2, m_gate;
 
 // FILM SCANNER
+FilmScanner FilmScanner(0); // set default mode: 0=stop
+StepperMotor m1, m2, m_gate;
 unsigned long saved_frames_count = 0;
-int pause_between_frames = 1000;
+const int pause_between_frames = 1000;
 int prev_mode = 0;
 bool mode_changed = false;
 
 // ENCODER
+Encoder rotary_encoder(18, 19); // set pins to interrupts
 float rotary_encoder_speed = 10.0; // Multiplier for frame delay
 long encoder_ref  = -999; // encoder reference value
 
 // LCD
+LiquidCrystal_I2C lcd(0x27, 20, 21); // NOTE! Before use, run ic2_scanner sketch and get the IC2 address, 0x27 for example
 bool drawLCD = true;
 bool drawLCD_stopped = true;
 
 void setup() {
 
-  // Start serial for debugging
-  //   Serial.begin(9600);
-  //   FilmScanner.enableDebugMode(); // comment out if not needed
-
   // Motors
-  FilmScanner.setupMotor(m1, 2, 3, 4); // Input pins in following order: motor,pulse,direction, enable
-  FilmScanner.setupMotor(m2, 5, 6, 7); // Input pins in following order: motor,pulse,direction, enable
-  FilmScanner.setupMotor(m_gate, 8, 9, 10); // Input pins in following order: motor,pulse,direction, enable
+  FilmScanner.setupMotor(m1, 2, 3, 4);
+  FilmScanner.setupMotor(m2, 5, 6, 7);
+  FilmScanner.setupMotor(m_gate, 8, 9, 10);
 
   // Control panel
-  FilmScanner.setControlPanelButtonPins(38, 40, 42, 44, 46, 48, 50); // Input pins in following order: stop,playback,play,rec,rw,ffw,reel-to-reel
-
-  // Rotary encoder >> USING ENCODER LIB INSTEAD
-  //   FilmScanner.setEncoderPins(18,19,52); // Input pins in following order: a, b, switch
-  //  attachInterrupt(digitalPinToInterrupt(FilmScanner.enc.pin_A), encoderStateChangeA, CHANGE);
-  //  attachInterrupt(digitalPinToInterrupt(FilmScanner.enc.pin_B), encoderStateChangeB, CHANGE);
-
+  FilmScanner.setControlPanelButtonPins(38, 40, 42, 44, 46, 48, 50);
   // Camera control
   FilmScanner.setCameraRemoteControlPin(11);
 
   // Switches and sensors
   FilmScanner.setGateSensorToPin(32);
-  //  FilmScanner.setSwingArmSensorsToPin(32, 34); // Input pins in following order: upper, lower
-  // LED OUTPUT Pin 36
+  // TODO: FilmScanner.setSwingArmSensorsToPin(33?, 34?); // Input pins in following order: upper, lower
 
   // Initialize the LCD
   lcd.init();
   // Print start messsage (mode=0)
   printLCD(0);
-
-  // SET CUSTOM VALUE AS STARTING PREF. FilmScanner.setPulseDelay();
-
 }
 
 
 void loop()
 {
-
-  switch (FilmScanner.getMode()) // tarkistetaan miten filmiä siirretään
+  switch (FilmScanner.getMode()) // Valitaan toiminto
   {
     case 1: // REEL-TO-REEL: STOP
       if (mode_changed)
@@ -135,16 +120,15 @@ void loop()
       }
       delay(pause_between_frames);
 
+      // READ ENCODER VALUE
       long encoder_current = rotary_encoder.read();
       if (encoder_current != encoder_ref) {
         encoder_ref = encoder_current;
-        //pause_between_frames = constrain(encoder_current * rotary_encoder_speed, 100, 5000);
-        //int encoder_current_constrained = constrain(encoder_current, 100, 5000);
         FilmScanner.setPulseDelay(int(encoder_current));
       }
       break;
 
-    case -1: // PLAY BACKWARDS: 5
+    case -1: // PLAY BACKWARDS: to enable, change value to 5 and uncomment
       if (mode_changed)
       {
         //FilmScanner.setMotorDirectionBackward(m1, m2, m_gate);
@@ -163,7 +147,7 @@ void loop()
         FilmScanner.lockMotor(m2);
         FilmScanner.unlockMotor(m_gate);
       }
-      // wait user to push: play / play_b / rec button
+      // do nothing, wait user to push: play / play_b / rec button
       break;
 
     case 7: // ERROR:
@@ -174,14 +158,11 @@ void loop()
       break;
   }
 
-  // Serial.println(digitalRead(30));
-
   // Print information about the selected mode
   printLCD(FilmScanner.getMode());
 
   // Read control panel buttons
   FilmScanner.readControlPanel();
-  //FilmScanner.debugControlPanel(); // print inputs from control panel (only for debugging)
 
   if (FilmScanner.getMode() != prev_mode)
   {
@@ -192,10 +173,6 @@ void loop()
   {
     mode_changed = false;
   }
-
-  //FilmScanner.readEncoder(); >> USE ENCODER LIB INSTEAD
-
-
 }
 
 
@@ -264,12 +241,10 @@ void printLCD (int mode)
         else
         {
           lcd.print("Playing");
-
         }
         drawLCD = false;
         drawLCD_stopped = true;
       }
-
 
       // Print a message to the LCD (continuously)
       if (FilmScanner.isRecording())
@@ -325,6 +300,18 @@ void printLCD (int mode)
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("ERROR");
+        drawLCD = false;
+        drawLCD_stopped = true;
+      }
+      break;
+
+    default:
+      if (drawLCD == true)
+      {
+        // Print a message to the LCD.
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("UNKNOWN ERROR");
         drawLCD = false;
         drawLCD_stopped = true;
       }

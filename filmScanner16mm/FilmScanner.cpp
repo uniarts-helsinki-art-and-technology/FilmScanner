@@ -301,10 +301,27 @@ void FilmScanner::readControlPanel()
       stopRecording();
     }
 
-    if (digitalRead(ffw_button.pin) == HIGH)
+    if (digitalRead(rw_button.pin) == HIGH && auto_ffw == true)
+    {
+      delay(1);
+      // stop rewinding (after another button is pressed again)
+      mode = 1;
+      auto_ffw = false;
+      delay(1000);
+    }
+
+    else if (digitalRead(ffw_button.pin) == HIGH && auto_ffw == false)
     {
       delay(1);
       mode = 2; // REEL-TO-REEL: FFW
+      // TODO: Count here how long button is pressed
+      auto_ffw_counter++;
+
+      // if button is pressed long enough start auto rewinding
+      if (auto_ffw_counter > auto_rewind_couter_limit)
+      {
+        auto_ffw = true;
+      }
 
       if (ffw_button_down == false)
       {
@@ -313,6 +330,26 @@ void FilmScanner::readControlPanel()
       }
       running_direction = true;
       speedUpRewinding();
+    }
+    else if (digitalRead(ffw_button.pin) == HIGH && auto_ffw == true && auto_ffw_counter > auto_rewind_couter_limit)
+    {
+      delay(1);
+      // continue rewinding while button pressed
+      mode = 2;
+    }
+    else if (digitalRead(ffw_button.pin) == HIGH && auto_ffw == true && auto_ffw_counter < auto_rewind_couter_limit)
+    {
+      delay(1);
+      // stop rewinding (after button is pressed again)
+      mode = 1;
+      auto_ffw = false;
+    }
+    else if (digitalRead(ffw_button.pin) == LOW && auto_ffw == true)
+    {
+      delay(1);
+      // continue rewinding automatically, no button pressed
+      mode = 2;
+      auto_ffw_counter = 0;
     }
     else if (digitalRead(rw_button.pin) == HIGH)
     {
@@ -331,6 +368,9 @@ void FilmScanner::readControlPanel()
     {
       delay(1);
       mode = 1; // REEL-TO-REEL: STOP
+      // TODO: reset counter
+      auto_ffw = false;
+      auto_ffw_counter = 0;
 
       if (is_rewinding == true)
       {
@@ -345,6 +385,9 @@ void FilmScanner::readControlPanel()
   {
     // PLAY MODE
     delay(1); // delay in between reads for stability
+    auto_ffw_counter = 0;
+    auto_ffw = false;
+
 
     if (is_playing == false) // better:  mode == 6
     {

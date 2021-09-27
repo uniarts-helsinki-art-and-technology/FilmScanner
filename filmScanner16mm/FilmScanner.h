@@ -115,7 +115,12 @@ class FilmScanner
     boolean running_direction_changed = false;
     boolean ffw_button_down = false;
     boolean rw_button_down = false;
+    boolean auto_ffw = false;
+    boolean auto_rw = false;
 
+    int auto_ffw_counter = 0;
+    int auto_rw_counter = 0;
+    int auto_rewind_couter_limit = 3;
     int pulse_delay = 100;
     const int min_delay = 500; // AccelStepper kirjastossa 1 Microsec, 500 micros sopiva minimiarvo
     const int max_delay = 1000;

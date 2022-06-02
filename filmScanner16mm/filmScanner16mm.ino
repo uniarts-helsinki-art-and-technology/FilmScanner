@@ -2,17 +2,19 @@
     |   _     _     _     _     _     _     _     _     _|
     |  |_|   |_|   |_|   |_|   |_|   |_|   |_|   |_|   |_
     | .                                                  |
-    |          This is KuvA-Scanner-Code v.1.0 .         |
+    |          This is KuvA-Scanner-Code v.1.2b          |
     |                                                    |
     |      description: code for 16mm telecine machine . |
     |                                                    |
-    |                  date: 27.09.2021                   |
+    |                  date: 11.02.2022                   |
     |                                                    |
     ^----------------------------------------------------^
 
 
                        NOTES
-
+Joakim's attempt to make the frame stop more accurate by
+driving the film srocket "over the threshold"
+and take the feedback when falling. smart?
 
 
 
@@ -63,6 +65,8 @@ void setup() {
   lcd.init();
   // Print start messsage (mode=0)
   printLCD(0);
+  //FilmScanner.enableDebugMode();
+
 }
 
 
@@ -109,35 +113,49 @@ void loop()
         FilmScanner.unlockMotor(m1);
         FilmScanner.lockMotor(m2);
         FilmScanner.lockMotor(m_gate);
+        FilmScanner.moveOneFrameCalibration(m1, m_gate); //For Calibration!!
       }
-      FilmScanner.moveOneFrame(m2, m_gate);
-
+      else
+      {
+        FilmScanner.moveOneFrame(m2, m_gate);
+      }
       // RECORDING
       if (FilmScanner.isRecording() == true)
       {
         FilmScanner.captureFrame();
         saved_frames_count = saved_frames_count + 1;
       }
+      // joakimin lisäys ---------------------------------------------------------- poista
+
+      //FilmScanner.unlockMotor(m1);
+      //FilmScanner.unlockMotor(m2);
+      //FilmScanner.unlockMotor(m_gate);
+      // joakimin lisäys ---------------------------------------------------------- poist
+
+
       delay(pause_between_frames);
 
-      // READ ENCODER VALUE
-      long encoder_current = rotary_encoder.read();
-      if (encoder_current != encoder_ref) {
-        encoder_ref = encoder_current;
-        FilmScanner.setPulseDelay(int(encoder_current));
-      }
+//      // READ ENCODER VALUE I took these away J
+//      long encoder_current = rotary_encoder.read();
+//      if (encoder_current != encoder_ref) {
+//        encoder_ref = encoder_current;
+//        FilmScanner.setPulseDelay(int(encoder_current));
+//      }
       break;
 
-    case -1: // PLAY BACKWARDS: to enable, change value to 5 and uncomment
+    case 5: // CALIBRATION PLAY
       if (mode_changed)
       {
-        //FilmScanner.setMotorDirectionBackward(m1, m2, m_gate);
-        //FilmScanner.unlockMotor(m2);
-        //FilmScanner.lockMotor(m1);
-        //FilmScanner.lockMotor(m_gate);
+        FilmScanner.setMotorDirectionForward(m1, m2, m_gate);
+        FilmScanner.unlockMotor(m1);
+        FilmScanner.lockMotor(m2);
+        FilmScanner.lockMotor(m_gate);
       }
-      //FilmScanner.moveOneFrame(m1, m_gate);
-      //delay(pause_between_frames);
+       FilmScanner.moveOneFrameCalibration(m1, m_gate); //For Calibration!!
+       delay(pause_between_frames);
+      //FilmScanner.setMode(byte(6)); //Change mode after one calibration move to stop!!!! J
+      //mode_changed=true;
+
       break;
 
     case 6:// STOPPED
@@ -184,7 +202,7 @@ void printLCD (int mode)
       // Print a message to the LCD.
       lcd.backlight();
       lcd.setCursor(0, 0);
-      lcd.print("Film scanner 1.0");
+      lcd.print("KuvaScan 1.2b");
       lcd.setCursor(0, 1);
       lcd.print("Starting...");
       delay(1000);
@@ -234,13 +252,13 @@ void printLCD (int mode)
         lcd.setCursor(0, 0);
         if (FilmScanner.isRecording())
         {
-          lcd.print("Recording");
+          lcd.print("Blind-Rec");
           lcd.setCursor(0, 1);
           lcd.print("FC:");
         }
         else
         {
-          lcd.print("Playing");
+          lcd.print("Blind-Play");
         }
         drawLCD = false;
         drawLCD_stopped = true;
@@ -262,13 +280,13 @@ void printLCD (int mode)
       }
       break;
 
-    case 5:
+    case 5:       //calibration play !! new thing
       if (drawLCD == true)
       {
         // Print a message to the LCD (only once)
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("Backwards");
+        lcd.print("Calibr-Play");
         drawLCD = false;
         drawLCD_stopped = true;
       }

@@ -51,6 +51,7 @@ class FilmScanner
 
     // MOTORS
     void moveOneFrame(StepperMotor &m1, StepperMotor &m2);
+    void moveOneFrameCalibration(StepperMotor &m1, StepperMotor &m2);
     void moveOneFrame(StepperMotor &m1, StepperMotor &m2, StepperMotor &m3);
     void rewinding(StepperMotor &m);
     void rewinding(StepperMotor &m1, StepperMotor &m2);
@@ -86,6 +87,7 @@ class FilmScanner
     void rewindOneStep(StepperMotor &m1, StepperMotor &m2, int d);
 
     void startPlayingForwards();
+    void startPlayingCalibration();
     void startPlayingBackwards();
 
     void stopPlaying();
@@ -108,7 +110,7 @@ class FilmScanner
     byte mode = 0;
     boolean running_direction = FORWARDS;
     boolean running_direction_set = false;
-    boolean debugMode = false;
+    boolean debugMode = true;
     boolean is_recording = false;
     boolean is_playing = false;
     boolean is_rewinding = false;
@@ -117,6 +119,7 @@ class FilmScanner
     boolean rw_button_down = false;
     boolean auto_ffw = false;
     boolean auto_rw = false;
+    boolean readytodrop = false;
 
     int auto_ffw_counter = 0;
     int auto_rw_counter = 0;

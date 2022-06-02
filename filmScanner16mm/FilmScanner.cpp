@@ -168,6 +168,21 @@ void FilmScanner::rewindOneStep(StepperMotor &m1, StepperMotor &m2, int d) // TO
 void FilmScanner::moveOneFrame(StepperMotor &m1, StepperMotor &m2)
 {
   gate_sensor.pressed = false; //default
+  readytodrop = false; //default
+
+  //Forward 1000 steps? TODO: CHOOSE ANOTHER HARD CODED VALUE?
+  for (int i = 0; i < 400; i++)
+  {
+    moveOneStep(m1, m2);
+  }
+}
+
+// USE this only for Calibration Play!!
+
+void FilmScanner::moveOneFrameCalibration(StepperMotor &m1, StepperMotor &m2)
+{
+  gate_sensor.pressed = false; //default
+  readytodrop = false; //default
 
   //Forward 1000 steps? TODO: CHOOSE ANOTHER HARD CODED VALUE?
   for (int i = 0; i < 1000; i++)
@@ -200,55 +215,20 @@ void FilmScanner::moveOneFrame(StepperMotor &m1, StepperMotor &m2)
           Serial.println("Frame detected after " + String(i) + " steps!");
         }
         gate_sensor.pressed = true;
+        //readytodrop = true;
         // break out from loop when frame is detected
         i = 1000;
       }
 
+
     }
 
   }
+  // here to exit from calibration after the success
+ setMode(6);
+ stopPlaying();
+
 }
-
-void FilmScanner::moveOneFrame(StepperMotor &m1, StepperMotor &m2, StepperMotor &m3)
-{
-  gate_sensor.pressed = false; //default
-
-  //Forward 1000 steps? TODO: CHOOSE ANOTHER HARD CODED VALUE?
-  for (int i = 0; i < 1000; i++)
-  {
-    moveOneStep(m1, m2, m3);
-
-    // Detect dropped frames
-    // TODO: Calculate automatically average threshold >> Too expensive?
-
-    if (i > 450)
-    {
-      dropped_frames++;
-      // TODO: Send error message to main program OR (better) go back one frame
-      if (debugMode == true)
-      {
-        Serial.println("Dropped frame, total number of dropped frames: " + String(dropped_frames));
-      }
-    }
-
-    // Do not detect switch state until motor has rotated
-    if (i > 150)
-    {
-      // read the state of the frame detection switch value:
-      // if switch is pressed break out from for loop
-      if (digitalRead(gate_sensor.pin) == HIGH)
-      {
-        if (debugMode == true) {
-          Serial.println("Frame detected after " + String(i) + " steps!");
-        }
-        gate_sensor.pressed = true;
-        // break out from loop when frame is detected
-        i = 1000;
-      }
-    }
-  }
-}
-
 
 void FilmScanner::rewinding(StepperMotor &m)
 {
@@ -407,8 +387,8 @@ void FilmScanner::readControlPanel()
       else if (digitalRead(play_backwards_button.pin) == HIGH)
       {
         delay(1); // delay in between reads for stability
-        mode = 5; // PLAY BACKWARDS
-        startPlayingBackwards();
+        mode = 5; // play forwards calibration  !?!?
+        startPlayingCalibration();
       }
       else
       {
@@ -474,7 +454,7 @@ void FilmScanner::debugControlPanel()
     else if (digitalRead(play_backwards_button.pin) == HIGH)
     {
       delay(1); // delay in between reads for stability
-      // START PLAY BACKWARDS
+      // START PLAY Calibration play
       Serial.println("FilmScanner PLAY BACK button connect to pin: " + String(play_backwards_button.pin) + " is pressed");
     }
     else if (digitalRead(stop_button.pin) == HIGH)
@@ -490,6 +470,13 @@ void FilmScanner::debugControlPanel()
 
 
 void FilmScanner::startPlayingForwards()
+{
+  running_direction_set = false;
+  running_direction = true;
+  is_playing = true;
+}
+
+void FilmScanner::startPlayingCalibration()
 {
   running_direction_set = false;
   running_direction = true;
@@ -526,7 +513,7 @@ void FilmScanner::lockMotor(StepperMotor &m)
 {
   if (m.enabled == DISABLED)
   {
-    digitalWrite(m.enable_pin, ENABLED);
+    digitalWrite(m.enable_pin, ENABLED);                    // täytyy tsekkaa onko logiikka unlock-lock oikein päin ???
     m.enabled = ENABLED;
   }
 }

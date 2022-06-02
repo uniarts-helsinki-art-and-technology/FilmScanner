@@ -2,11 +2,11 @@
     |   _     _     _     _     _     _     _     _     _|
     |  |_|   |_|   |_|   |_|   |_|   |_|   |_|   |_|   |_
     | .                                                  |
-    |          This is KuvA-Scanner-Code v.1.2b          |
+    |          This is KuvA-Scanner-Code v.1.2          |
     |                                                    |
     |      description: code for 16mm telecine machine . |
     |                                                    |
-    |                  date: 11.02.2022                   |
+    |                  date: 02.06.2022                   |
     |                                                    |
     ^----------------------------------------------------^
 

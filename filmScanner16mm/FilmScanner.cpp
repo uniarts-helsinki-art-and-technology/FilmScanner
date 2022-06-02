@@ -225,9 +225,11 @@ void FilmScanner::moveOneFrameCalibration(StepperMotor &m1, StepperMotor &m2)
 
   }
   // here to exit from calibration after the success
- setMode(6);
- stopPlaying();
-
+  if(mode!=4) // when not playing
+  {
+   setMode(6);
+   stopPlaying();
+  }
 }
 
 void FilmScanner::rewinding(StepperMotor &m)
@@ -387,7 +389,7 @@ void FilmScanner::readControlPanel()
       else if (digitalRead(play_backwards_button.pin) == HIGH)
       {
         delay(1); // delay in between reads for stability
-        mode = 5; // play forwards calibration  !?!?
+        mode = 5; // play forwards calibration
         startPlayingCalibration();
       }
       else

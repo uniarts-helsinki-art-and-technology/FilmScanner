@@ -23,7 +23,7 @@ and take the feedback when falling. smart?
 */
 
 #include "FilmScanner.h"
-#include <Encoder.h>
+//#include <Encoder.h>
 #include <LiquidCrystal_I2C.h> // external library
 
 
@@ -35,10 +35,12 @@ const int pause_between_frames = 1000;
 int prev_mode = 0;
 bool mode_changed = false;
 
-// ENCODER
-Encoder rotary_encoder(18, 19); // set pins to interrupts
-float rotary_encoder_speed = 10.0; // Multiplier for frame delay
-long encoder_ref  = -999; // encoder reference value
+// ENCODER BREAKS THE FUNCTIONALITY
+// TODO: REPLACE WITH POTENTIOMETER
+//Encoder rotary_encoder(18, 19); // set pins to interrupts
+//float rotary_encoder_speed = 10.0; // Multiplier for frame delay
+//long encoder_ref  = -999; // encoder reference value
+//long encoder_value  = 0; // encoder reference value
 
 // LCD
 LiquidCrystal_I2C lcd(0x27, 20, 21); // NOTE! Before use, run ic2_scanner sketch and get the IC2 address, 0x27 for example
@@ -93,6 +95,12 @@ void loop()
         FilmScanner.lockMotor(m2);
       }
       FilmScanner.rewinding(m2);
+
+      //      // READ ENCODER VALUE > TESTING
+      // ENCODER BREAKS THE FUNCTINALITY
+      //    long encoder_current = rotary_encoder.read();
+
+      
       break;
 
     case 3: // REEL-TO-REEL: RW
@@ -113,7 +121,7 @@ void loop()
         FilmScanner.unlockMotor(m1);
         FilmScanner.lockMotor(m2);
         FilmScanner.lockMotor(m_gate);
-        FilmScanner.moveOneFrameCalibration(m1, m_gate); //For Calibration!!
+        FilmScanner.moveOneFrameCalibration(m2, m_gate); //Calibrate for first frame
       }
       else
       {
@@ -125,22 +133,10 @@ void loop()
         FilmScanner.captureFrame();
         saved_frames_count = saved_frames_count + 1;
       }
-      // joakimin lisäys ---------------------------------------------------------- poista
-
-      //FilmScanner.unlockMotor(m1);
-      //FilmScanner.unlockMotor(m2);
-      //FilmScanner.unlockMotor(m_gate);
-      // joakimin lisäys ---------------------------------------------------------- poist
-
 
       delay(pause_between_frames);
 
-//      // READ ENCODER VALUE I took these away J
-//      long encoder_current = rotary_encoder.read();
-//      if (encoder_current != encoder_ref) {
-//        encoder_ref = encoder_current;
-//        FilmScanner.setPulseDelay(int(encoder_current));
-//      }
+
       break;
 
     case 5: // CALIBRATION PLAY
@@ -151,10 +147,9 @@ void loop()
         FilmScanner.lockMotor(m2);
         FilmScanner.lockMotor(m_gate);
       }
-       FilmScanner.moveOneFrameCalibration(m1, m_gate); //For Calibration!!
-       delay(pause_between_frames);
-      //FilmScanner.setMode(byte(6)); //Change mode after one calibration move to stop!!!! J
-      //mode_changed=true;
+      FilmScanner.moveOneFrameCalibration(m2, m_gate); //Calibrate
+      FilmScanner.setMode(byte(6));
+      delay(pause_between_frames);
 
       break;
 
@@ -186,6 +181,7 @@ void loop()
   {
     mode_changed = true;
     prev_mode = FilmScanner.getMode();
+    lcd.clear();
   }
   else
   {
@@ -196,6 +192,8 @@ void loop()
 
 void printLCD (int mode)
 {
+
+  
   switch (mode)
   {
     case 0:
@@ -229,6 +227,11 @@ void printLCD (int mode)
         lcd.print("Reel-To-Reel:FFW");
         drawLCD = false;
       }
+//      lcd.setCursor(0, 1);
+//      lcd.print("    ");
+//      lcd.setCursor(0, 1);
+//      lcd.print(String(encoder_value));
+      
       drawLCD_stopped = true;
       break;
 
@@ -252,13 +255,13 @@ void printLCD (int mode)
         lcd.setCursor(0, 0);
         if (FilmScanner.isRecording())
         {
-          lcd.print("Blind-Rec");
+          lcd.print("Rec");
           lcd.setCursor(0, 1);
           lcd.print("FC:");
         }
         else
         {
-          lcd.print("Blind-Play");
+          lcd.print("Play");
         }
         drawLCD = false;
         drawLCD_stopped = true;
@@ -280,7 +283,7 @@ void printLCD (int mode)
       }
       break;
 
-    case 5:       //calibration play !! new thing
+    case 5:  // calibration
       if (drawLCD == true)
       {
         // Print a message to the LCD (only once)

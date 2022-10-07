@@ -108,6 +108,7 @@ class FilmScanner
     void move_one_step(StepperMotor m1, StepperMotor m2, StepperMotor m3, int d);
 
     byte mode = 0;
+    byte prev_mode = 0;
     boolean running_direction = FORWARDS;
     boolean running_direction_set = false;
     boolean debugMode = true;

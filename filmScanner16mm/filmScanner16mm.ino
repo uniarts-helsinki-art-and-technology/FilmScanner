@@ -2,11 +2,11 @@
     |   _     _     _     _     _     _     _     _     _|
     |  |_|   |_|   |_|   |_|   |_|   |_|   |_|   |_|   |_
     | .                                                  |
-    |          This is KuvA-Scanner-Code v.1.2          |
+    |          This is KuvA-Scanner-Code v.1.3          |
     |                                                    |
     |      description: code for 16mm telecine machine . |
     |                                                    |
-    |                  date: 02.06.2022                   |
+    |                  date: 14.12.2022                   |
     |                                                    |
     ^----------------------------------------------------^
 
@@ -15,6 +15,9 @@
 Joakim's attempt to make the frame stop more accurate by
 driving the film srocket "over the threshold"
 and take the feedback when falling. smart?
+
+14.12.2022
+Fixing the lower swing arm with a switch.
 
 
 
@@ -29,7 +32,7 @@ and take the feedback when falling. smart?
 
 // FILM SCANNER
 FilmScanner FilmScanner(0); // set default mode: 0=stop
-StepperMotor m1, m2, m_gate;
+StepperMotor UpperReelMotor, LowerReelMotor, GateMotor;
 unsigned long saved_frames_count = 0;
 const int pause_between_frames = 1000;
 int prev_mode = 0;
@@ -48,11 +51,14 @@ bool drawLCD = true;
 bool drawLCD_stopped = true;
 
 void setup() {
+  
+  // Uncomment for debugging
+ // FilmScanner.enableDebugMode();
 
   // Motors
-  FilmScanner.setupMotor(m1, 2, 3, 4);
-  FilmScanner.setupMotor(m2, 5, 6, 7);
-  FilmScanner.setupMotor(m_gate, 8, 9, 10);
+  FilmScanner.setupMotor(UpperReelMotor, 2, 3, 4);
+  FilmScanner.setupMotor(LowerReelMotor, 5, 6, 7);
+  FilmScanner.setupMotor(GateMotor, 8, 9, 10);
 
   // Control panel
   FilmScanner.setControlPanelButtonPins(38, 40, 42, 44, 46, 48, 50);
@@ -61,15 +67,19 @@ void setup() {
 
   // Switches and sensors
   FilmScanner.setGateSensorToPin(32);
-  // TODO: FilmScanner.setSwingArmSensorsToPin(33?, 34?); // Input pins in following order: upper, lower
+  FilmScanner.setSwingArmSensorsToPin(30,34); // pins (upper, lower)
 
   // Initialize the LCD
   lcd.init();
   // Print start messsage (mode=0)
-  printLCD(0);
-  //FilmScanner.enableDebugMode();
+  //printLCD(0);
+
+
 
 }
+
+
+
 
 
 void loop()
@@ -79,9 +89,9 @@ void loop()
     case 1: // REEL-TO-REEL: STOP
       if (mode_changed)
       {
-        FilmScanner.unlockMotor(m1);
-        FilmScanner.unlockMotor(m2);
-        FilmScanner.unlockMotor(m_gate);
+        FilmScanner.unlockMotor(UpperReelMotor);
+        FilmScanner.unlockMotor(LowerReelMotor);
+        FilmScanner.unlockMotor(GateMotor);
       }
       // scanner is stopped, waiting user to push ffw / rw button
       break;
@@ -89,12 +99,12 @@ void loop()
     case 2: // REEL-TO-REEL: FFW
       if (mode_changed)
       {
-        FilmScanner.setMotorDirectionForward(m1, m2, m_gate);
-        FilmScanner.unlockMotor(m1);
-        FilmScanner.unlockMotor(m_gate);
-        FilmScanner.lockMotor(m2);
+        FilmScanner.setMotorDirectionForward(UpperReelMotor, LowerReelMotor, GateMotor);
+        FilmScanner.unlockMotor(UpperReelMotor);
+        FilmScanner.unlockMotor(GateMotor);
+        FilmScanner.lockMotor(LowerReelMotor);
       }
-      FilmScanner.rewinding(m2);
+      FilmScanner.rewinding(LowerReelMotor);
 
       //      // READ ENCODER VALUE > TESTING
       // ENCODER BREAKS THE FUNCTINALITY
@@ -106,26 +116,26 @@ void loop()
     case 3: // REEL-TO-REEL: RW
       if (mode_changed)
       {
-        FilmScanner.setMotorDirectionBackward(m1, m2, m_gate);
-        FilmScanner.unlockMotor(m2);
-        FilmScanner.unlockMotor(m_gate);
-        FilmScanner.lockMotor(m1);
+        FilmScanner.setMotorDirectionBackward(UpperReelMotor, LowerReelMotor, GateMotor);
+        FilmScanner.unlockMotor(LowerReelMotor);
+        FilmScanner.unlockMotor(GateMotor);
+        FilmScanner.lockMotor(UpperReelMotor);
       }
-      FilmScanner.rewinding(m1);
+      FilmScanner.rewinding(UpperReelMotor);
       break;
 
     case 4: // PLAY AND RECORD
       if (mode_changed)
       {
-        FilmScanner.setMotorDirectionForward(m1, m2, m_gate);
-        FilmScanner.unlockMotor(m1);
-        FilmScanner.lockMotor(m2);
-        FilmScanner.lockMotor(m_gate);
-        FilmScanner.moveOneFrameCalibration(m2, m_gate); //Calibrate for first frame
+        FilmScanner.setMotorDirectionForward(UpperReelMotor, LowerReelMotor, GateMotor);
+        FilmScanner.unlockMotor(UpperReelMotor);
+        FilmScanner.lockMotor(LowerReelMotor);
+        FilmScanner.lockMotor(GateMotor);
+        FilmScanner.moveOneFrameCalibration(LowerReelMotor, GateMotor); //Calibrate for first frame
       }
       else
       {
-        FilmScanner.moveOneFrame(m2, m_gate);
+        FilmScanner.moveOneFrame(LowerReelMotor, GateMotor);
       }
       // RECORDING
       if (FilmScanner.isRecording() == true)
@@ -142,12 +152,12 @@ void loop()
     case 5: // CALIBRATION PLAY
       if (mode_changed)
       {
-        FilmScanner.setMotorDirectionForward(m1, m2, m_gate);
-        FilmScanner.unlockMotor(m1);
-        FilmScanner.lockMotor(m2);
-        FilmScanner.lockMotor(m_gate);
+        FilmScanner.setMotorDirectionForward(UpperReelMotor, LowerReelMotor, GateMotor);
+        FilmScanner.unlockMotor(UpperReelMotor);
+        FilmScanner.lockMotor(LowerReelMotor);
+        FilmScanner.lockMotor(GateMotor);
       }
-      FilmScanner.moveOneFrameCalibration(m2, m_gate); //Calibrate
+      FilmScanner.moveOneFrameCalibration(LowerReelMotor, GateMotor); //Calibrate
       FilmScanner.setMode(byte(6));
       delay(pause_between_frames);
 
@@ -156,15 +166,14 @@ void loop()
     case 6:// STOPPED
       if (mode_changed)
       {
-        FilmScanner.unlockMotor(m1);
-        FilmScanner.lockMotor(m2);
-        FilmScanner.unlockMotor(m_gate);
+        FilmScanner.unlockMotor(UpperReelMotor);
+        FilmScanner.unlockMotor(LowerReelMotor);
+        FilmScanner.unlockMotor(GateMotor);
       }
       // do nothing, wait user to push: play / play_b / rec button
       break;
 
     case 7: // ERROR:
-      // TODO: solve errors with multi jog?
       break;
 
     default:
@@ -200,7 +209,7 @@ void printLCD (int mode)
       // Print a message to the LCD.
       lcd.backlight();
       lcd.setCursor(0, 0);
-      lcd.print("KuvaScan 1.2b");
+      lcd.print("KuvaScan 1.3");
       lcd.setCursor(0, 1);
       lcd.print("Starting...");
       delay(1000);

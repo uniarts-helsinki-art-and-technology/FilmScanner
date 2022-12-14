@@ -16,6 +16,7 @@ typedef struct {
 } StepperMotor;
 
 typedef struct {
+  String type;
   byte pin;
 } button;
 
@@ -40,7 +41,6 @@ class FilmScanner
     void setupMotor(StepperMotor &m, byte pulse_pin, byte direction_pin, byte enable_pin);
     void setControlPanelButtonPins(byte stop_b, byte playb_b, byte play_b, byte rec_b, byte rw_b, byte ffw_b, byte reel_b);
     void setCameraRemoteControlPin(byte );
-    void setSwingArmSensorsToPin(byte upper_arm_pin, byte lower_arm_pin);
 
     // MODES
     void setMode(byte m);
@@ -48,6 +48,7 @@ class FilmScanner
 
     // SENSORS
     void setGateSensorToPin(byte pin);
+    void setSwingArmSensorsToPin(byte upper_arm_pin, byte lower_arm_pin);
 
     // MOTORS
     void moveOneFrame(StepperMotor &m1, StepperMotor &m2);
@@ -76,7 +77,7 @@ class FilmScanner
     bool isRecording();
 
   private:
-    void setupButton(button &b, byte pin);
+    void setupButton(String t, button &b, byte pin);
     void setupSensor(sensor &s, byte pin);
     void interruptRewinding();
 

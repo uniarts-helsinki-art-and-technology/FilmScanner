@@ -34,31 +34,42 @@ void FilmScanner::setCameraRemoteControlPin(byte capture)
 void FilmScanner::setSwingArmSensorsToPin(byte upper_arm_pin, byte lower_arm_pin)
 {
   upper_swing_arm.pin = upper_arm_pin;
+  upper_swing_arm.pressed = false;
   lower_swing_arm.pin = lower_arm_pin;
-  pinMode(capture_output.pin, OUTPUT);
+  lower_swing_arm.pressed = false;
+  pinMode (upper_swing_arm.pin, INPUT);
+  pinMode (lower_swing_arm.pin, INPUT);
+  delay(1);
+  
+  if (debugMode == true)
+  {
+    Serial.println("Upper swing arm sensor set to pin " + String(upper_swing_arm.pin));
+    Serial.println("Lower swing arm sensor set to pin " + String(lower_swing_arm.pin));
+  }
 }
 
 void FilmScanner::setControlPanelButtonPins(byte stop_b, byte playb_b, byte play_b, byte rec_b, byte rw_b, byte ffw_b, byte reel_b)
 {
   // remove this: setupButton(multi_jog, multi_jog_b);
-  setupButton(stop_button, stop_b);
-  setupButton(play_backwards_button, playb_b);
-  setupButton(play_button, play_b);
-  setupButton(rec_button, rec_b);
-  setupButton(rw_button, rw_b);
-  setupButton(ffw_button, ffw_b);
-  setupButton(reel_master_switch, reel_b);
+  setupButton("Stop button", stop_button, stop_b);
+  setupButton("Play backwards button", play_backwards_button, playb_b);
+  setupButton("Play button", play_button, play_b);
+  setupButton("Rec button", rec_button, rec_b);
+  setupButton("RW button", rw_button, rw_b);
+  setupButton("FFW button", ffw_button, ffw_b);
+  setupButton("Reel-to-reel switch", reel_master_switch, reel_b);
 }
 
-void FilmScanner::setupButton(button &b, byte pin)
+void FilmScanner::setupButton(String t, button &b, byte pin)
 {
+  b.type = t;
   b.pin = pin;
   pinMode (b.pin, INPUT);
   delay(1);
 
   if (debugMode == true)
   {
-    Serial.println("Button set to pin " + String(pin));
+    Serial.println(String(b.type)+" set to pin " + String(pin));
   }
 }
 
@@ -170,10 +181,21 @@ void FilmScanner::moveOneFrame(StepperMotor &m1, StepperMotor &m2)
   gate_sensor.pressed = false; //default
   readytodrop = false; //default
 
-  //Forward 1000 steps? TODO: CHOOSE ANOTHER HARD CODED VALUE?
-  for (int i = 0; i < 400; i++)
+  // MAKE SURE THE FILM IS NOT PULLING TOO MUCH
+  if (digitalRead(lower_swing_arm.pin) == HIGH)
   {
-    moveOneStep(m1, m2);
+    //Forward 1000 steps? TODO: CHOOSE ANOTHER HARD CODED VALUE?
+    for (int i = 0; i < 400; i++)
+    {
+      moveOneStep(m2);
+    }
+  }
+  else
+  {
+    for (int i = 0; i < 400; i++)
+    {
+      moveOneStep(m1, m2);
+    }
   }
 }
 

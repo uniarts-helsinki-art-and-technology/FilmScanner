@@ -53,7 +53,7 @@ bool drawLCD_stopped = true;
 void setup() {
   
   // Uncomment for debugging
- // FilmScanner.enableDebugMode();
+  FilmScanner.enableDebugMode();
 
   // Motors
   FilmScanner.setupMotor(UpperReelMotor, 2, 3, 4);
@@ -66,8 +66,8 @@ void setup() {
   FilmScanner.setCameraRemoteControlPin(11);
 
   // Switches and sensors
-  FilmScanner.setGateSensorToPin(32);
-  FilmScanner.setSwingArmSensorsToPin(30,34); // pins (upper, lower)
+  FilmScanner.setGateSensorToPin(30);
+  FilmScanner.setSwingArmSensorsToPin(32,34); // pins (upper, lower)
 
   // Initialize the LCD
   lcd.init();
@@ -143,7 +143,6 @@ void loop()
         FilmScanner.captureFrame();
         saved_frames_count = saved_frames_count + 1;
       }
-
       delay(pause_between_frames);
 
 

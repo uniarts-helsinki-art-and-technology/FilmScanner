@@ -218,10 +218,10 @@ void FilmScanner::moveOneFrameCalibration(StepperMotor &m1, StepperMotor &m2)
     if (i > 450)
     {
       dropped_frames++;
-      // TODO: Send error message to main program OR (better) go back one frame
+        // TODO: Send error message to main program OR (better) go back one frame
       if (debugMode == true)
       {
-        Serial.println("Dropped frame, total number of dropped frames: " + String(dropped_frames));
+        //Serial.println("Dropped frame, total number of dropped frames: " + String(dropped_frames));
       }
     }
 
@@ -239,6 +239,8 @@ void FilmScanner::moveOneFrameCalibration(StepperMotor &m1, StepperMotor &m2)
         gate_sensor.pressed = true;
         //readytodrop = true;
         // break out from loop when frame is detected
+        steps_for_one_frame = i;
+        Serial.println(steps_for_one_frame);
         i = 1000;
       }
 

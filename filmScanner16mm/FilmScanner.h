@@ -127,6 +127,7 @@ class FilmScanner
     int auto_rw_counter = 0;
     int auto_rewind_couter_limit = 3;
     int pulse_delay = 100;
+    int steps_for_one_frame = 0;
     const int min_delay = 500; // AccelStepper kirjastossa 1 Microsec, 500 micros sopiva minimiarvo
     const int max_delay = 1000;
     int delay_ramp = min_delay;

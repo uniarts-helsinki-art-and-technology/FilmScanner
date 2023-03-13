@@ -51,9 +51,9 @@ bool drawLCD = true;
 bool drawLCD_stopped = true;
 
 void setup() {
-  
+  //Serial.begin(9600);
   // Uncomment for debugging
-  FilmScanner.enableDebugMode();
+  //FilmScanner.enableDebugMode();
 
   // Motors
   FilmScanner.setupMotor(UpperReelMotor, 2, 3, 4);
@@ -140,6 +140,7 @@ void loop()
       // RECORDING
       if (FilmScanner.isRecording() == true)
       {
+        delay(100);
         FilmScanner.captureFrame();
         saved_frames_count = saved_frames_count + 1;
       }
@@ -208,7 +209,7 @@ void printLCD (int mode)
       // Print a message to the LCD.
       lcd.backlight();
       lcd.setCursor(0, 0);
-      lcd.print("KuvaScan 1.3");
+      lcd.print("KuvaScan 1.4");
       lcd.setCursor(0, 1);
       lcd.print("Starting...");
       delay(1000);

@@ -181,22 +181,52 @@ void FilmScanner::moveOneFrame(StepperMotor &m1, StepperMotor &m2)
   gate_sensor.pressed = false; //default
   readytodrop = false; //default
 
+      // MOVE GATE FIRST
+    for (int i = 0; i < 400; i++)
+    {
+      moveOneStep(m2);
+    }
+   for (int i = 0; i < 400; i++)
+    {
+      if (digitalRead(lower_swing_arm.pin) == HIGH)
+      {
+        i = 1000;
+      }
+      else
+      {
+      moveOneStep(m1);
+      }
+    }
+
+/*
   // MAKE SURE THE FILM IS NOT PULLING TOO MUCH
   if (digitalRead(lower_swing_arm.pin) == HIGH)
   {
     //Forward 1000 steps? TODO: CHOOSE ANOTHER HARD CODED VALUE?
+    
+    // MOVE GATE FIRST
     for (int i = 0; i < 400; i++)
     {
       moveOneStep(m2);
+    }
+    // MOVE 
+    for (int i = 0; i < 100; i++)
+    {
+      moveOneStep(m1);
     }
   }
   else
   {
     for (int i = 0; i < 400; i++)
     {
-      moveOneStep(m1, m2);
+      moveOneStep(m2);
+    }
+    for (int i = 0; i < 400; i++)
+    {
+      moveOneStep(m1);
     }
   }
+  */
 }
 
 // USE this only for Calibration Play!!
@@ -240,7 +270,7 @@ void FilmScanner::moveOneFrameCalibration(StepperMotor &m1, StepperMotor &m2)
         //readytodrop = true;
         // break out from loop when frame is detected
         steps_for_one_frame = i;
-        Serial.println(steps_for_one_frame);
+       // Serial.println(steps_for_one_frame);
         i = 1000;
       }
 
